@@ -29,8 +29,13 @@ public class DateTimeGateWay {
   private static final Logger LOGGER = Logger.getLogger(HawkingTimeParser.class.getName());
 
   public static List<DateTimeProperties> getDateAndTime(DateTimeEssentials dateTimeEssentials) throws Exception {
+    /*
+    Remember that dateTimeEssentials has the essentials (the input string, start, end, tense, etc.)
+     */
+
     List<DateTimeProperties> dateTimePropertiesList = new ArrayList<>();
     AbstractLanguage abstractLanguage = LanguageFactory.getLanguageImpl("eng"); //No I18N
+    //gets the dateType (will always be -1 b/c none of them are relation
     int dateType = findDateType(dateTimeEssentials);
     switch (dateType) {
       case 0:
@@ -85,7 +90,9 @@ public class DateTimeGateWay {
           LOGGER.info("DateTimeGateWay :: NO DATES FOUND");
           break;
         }
+        //now, date time properties holds all of dateTimeEssentialls
         DateTimeProperties dateTimeProperties = new DateTimeProperties(dateTimeEssentials, dateTimeEssentials.getTriples().get(0));
+        //finally this parses the date string into the actual components of the date/time
         dateTimeProperties.setParsedDate();
 
         Pair<ParserOutput, DateGroup> dateGroupPair = HawkingTimeParser.setDateAndTime(dateTimeProperties, abstractLanguage);

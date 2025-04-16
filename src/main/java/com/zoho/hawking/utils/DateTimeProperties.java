@@ -150,9 +150,24 @@ public class DateTimeProperties {
 
 
     public void setParsedDate() {
+        //remove time zone from input text
         parsedText = removeTimeZone(parsedText);
+        //remove some parts of text and place at front (more filtering)
         parsedText = cardinalNumberFinder(parsedText);
+        /*
+            Tag each word inside the input text with a label (so 20 is a number, december is a month of the year, on
+            is a prefix, etc.)
+         */
         ParsedDate parserDate = Recognizer.recognize(parsedText);
+        //System.out.println(parserDate.getTaggedWithXML());
+        //System.out.println(parserDate.getOutputWithOffsets());
+        /*
+            tagPredictor converts the list of tags into the following:
+            componentsMap is a HashMap
+            key: component (like month, year, second, etc.)
+            value: the value of it (like december, 2020, 40, etc.)
+            null if there is no value for said component
+         */
         componentsMap = Recognizer.tagPredictor(parsedText, parserDate.getOutputWithOffsets());
         setParserOutput(parserDate);
         parserOutput.setIsExactTimePresent(

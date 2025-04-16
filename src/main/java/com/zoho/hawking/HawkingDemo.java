@@ -15,6 +15,28 @@ class HawkingDemo {
       .getLogger(HawkingDemo.class);
 
   public static void main(String[] args) throws Exception {
+    /*
+      HawkingTimeParser.parse ->
+      EnglishLanguage.predict ->
+      DateTimeGateway.getDateAndTime ->
+      HawkingTimePraser.setDateAndTime ->
+      DateTimeParser.timeParser ->
+      calls all the individual components
+
+
+      Every component requires this:
+      String sentenceToParse, String sentenceTense, DateAndTime dateAndTime, AbstractLanguage abstractLanguage)
+
+      How to get these:
+      sentenceToParse -> sentence to parse (it is in the tag <> form) ex
+      <implict_prefix>on</implict_prefix> <month_of_year>december</month_of_year> <exact_number>20</exact_number>
+      to get this, just run a sentence through to get the sentenceToParse
+      DateAndTime (just put in new Date(null) i think)
+      sentenceTense (look at CoreMlpUtils.java getTense for these just put in a random one)
+      AbstractLanguage abstractLanguage = LanguageFactory.getLanguageImpl(lang); lang is "eng"
+
+
+     */
     HawkingTimeParser parser = new HawkingTimeParser();
     String inputText = "Good morning, Have a nice day. Shall we meet on December 20 ?";
     HawkingConfiguration hawkingConfiguration = new HawkingConfiguration();

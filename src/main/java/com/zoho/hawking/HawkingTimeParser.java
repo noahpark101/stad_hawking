@@ -30,6 +30,9 @@ public class HawkingTimeParser {
 
 
     public DatesFound parse(String inputSentence, Date referenceDate, HawkingConfiguration config, String lang) {
+        /*
+            Configuration just holds years, hours, days, etc. (class of constants)
+         */
         Configuration configuration = new Configuration(config);
         ConfigurationConstants.setConfiguration(configuration);
         List<ParserOutput> parserOutputs = new ArrayList<>();
@@ -39,6 +42,9 @@ public class HawkingTimeParser {
         AbstractLanguage abstractLanguage = LanguageFactory.getLanguageImpl(lang);
         assert abstractLanguage != null;
         List<DateTimeProperties> dateList = abstractLanguage.predict(inputSentence, referenceDate, config);
+        /*
+            Uses EnglishLanguage class to extract dates from input lang string
+         */
         for (DateTimeProperties date : dateList) {
             parserOutputs.add(date.getParserOutput());
             dateGroups.add(date.getDateGroup());
@@ -54,6 +60,8 @@ public class HawkingTimeParser {
     public static Pair<ParserOutput, DateGroup> setDateAndTime(DateTimeProperties dateTimeProperties, AbstractLanguage abstractLanguage) {
         ParserOutput parserOutput = dateTimeProperties.getParserOutput();
         DateTimeEssentials dateTimeEssentials = dateTimeProperties.getDateTimeEssentials();
+        System.out.print("PRINTING OUT TENSE");
+        System.out.println(dateTimeProperties.getDateTimeEssentials().getTense());
         DateAndTime dateAndTime = DateTimeParser.timeParser(
             dateTimeProperties.getReferenceTime() != null ? dateTimeProperties.getReferenceTime() : dateTimeEssentials.getReferenceTime(),
             dateTimeProperties.getDateTimeEssentials().getTense(),

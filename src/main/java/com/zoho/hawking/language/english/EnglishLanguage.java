@@ -48,25 +48,57 @@ public class EnglishLanguage extends AbstractLanguage {
     @Override
     public List<DateTimeProperties> predict(String inputSentence, Date referenceDate, HawkingConfiguration config) {
         List<DateTimeProperties> dateList = new ArrayList<>();
+        /*
+            Splits input lang string into sentences
+         */
         List<String> inputSentences = CoreNlpUtils.sentenceTokenize(inputSentence);
-        int maxParseDates = config.getMaxParseDate();
+        int maxParseDates = config.getMaxParseDate(); //max number of dates to parse
         int dateCounter = 0;
+
         for(String sent: inputSentences){
+            /*
+                Returns of a list of pairs in this form (relation, object)
+                relation is true or false TODO: FLESH THIS OUT
+                object is (label, start index, end index)
+                the label is what type this text is classified as (in this case label D is date)
+                start index is where text starts
+                end index is where text ends
+                Label D: represents Date
+                Label R: represents relation
+                Basically, what this does is it looks through the input and finds the separate dates
+                In the end you get a list of strings that have a date in them
+
+             */
             List<Pair<Boolean, List<Triple<String, Integer, Integer>>>> singleDatesList = getSeparateDates(Parser.parse(sent));
+            //System.out.println(singleDatesList);
             for (Pair<Boolean, List<Triple<String, Integer, Integer>>> relAndDate : singleDatesList) {
+                System.out.println("DateTimeEssentials contents:");
+                System.out.println(inputSentence);
+                System.out.println(sent);
+                System.out.println(relAndDate);
+                System.out.println(getTense(sent));
+                System.out.println(relAndDate);
+                //gets the triple
                 List<Triple<String, Integer, Integer>> triples = relAndDate.getRight();
                 DateTimeEssentials dateTimeEssentials = new DateTimeEssentials();
+                //input sentence is the whole input string
                 dateTimeEssentials.setParagraph(inputSentence);
                 dateTimeEssentials.addId();
+                //sent is one sentence from the whole input string we are looking at
                 dateTimeEssentials.setSentence(sent);
                 dateTimeEssentials.setTriples(relAndDate);
+                //tense is just english term for future, past, present, etc. tense
                 dateTimeEssentials.setTense(getTense(sent));
                 if (!triples.isEmpty()) {
                     Triple<String, Integer, Integer> triple = triples.get(0);
 
                     int startIndex = triple.second;
                     int endIndex = triple.third;
+                    //get the text that holds the date information
                     String parsedText = sent.substring(startIndex, endIndex);
+                    //gets the time offset, some dates/times are referenced like 20 seconds ago (this needs a reference time)
+                    System.out.println("TEMPORARY");
+                    System.out.println(parsedText);
                     DateTimeOffsetReturn dateTimeOffsetReturn = TimeZoneExtractor.referenceDateExtractor(referenceDate, config, parsedText);
                     if(!TimeZoneExtractor.isTimeZonePresent){
                         dateTimeOffsetReturn = TimeZoneExtractor.referenceDateExtractor(referenceDate, config, sent);
@@ -74,6 +106,7 @@ public class EnglishLanguage extends AbstractLanguage {
                     dateTimeEssentials.setReferenceTime(dateTimeOffsetReturn.getReferenceDate());
                     dateTimeEssentials.setTimeZoneOffSet(dateTimeOffsetReturn.getTimeOffset());
                     try {
+                        //now actually take the input string that for sure only has 1 date and get info out of it
                         dateList.addAll(DateTimeGateWay.getDateAndTime(dateTimeEssentials));
                         dateCounter += 1;
                         if (maxParseDates != 0 && dateCounter == maxParseDates){

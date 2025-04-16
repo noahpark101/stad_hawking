@@ -51,10 +51,23 @@ public class Recognizer {
     }
 
     public static Map<String, String> tagPredictor(String input, List<Triple<String, Integer, Integer>> tagList) {
+        /*
+            Tags Each:
+            key: (year, month, hours, seconds, etc.)
+            value: the value found (it none then null)
+            ex: given December 20 input string
+            key: month value: december
+            key: day value: 20
+         */
         Map<String, String> tagsEach = new HashMap<>();
         ArrayList<String> inputTagList = TagPredictor.getInputTagList(tagList);
         String inputTagPattern = TagPredictor.getInputTagPattern(inputTagList);
-
+        /*
+            Basically, now that we have a sequence of tags (tag to word) ex - PREFIX, MONTH_OF_YEAR, EXACT_NUMBER,
+            it can match a pattern
+            we use this pattern thus to get the year and month (if the pattern turns out to not have some info like
+            year, it returns null)
+         */
         tagsEach.put("year", TagPredictor.yearPredictor(input, tagList, inputTagList, inputTagPattern));
         tagsEach.put("month", TagPredictor.monthPredictor(input, tagList, inputTagList, inputTagPattern));
         String customDate = TagPredictor.customPredictor(input, tagList, inputTagList, inputTagPattern);
