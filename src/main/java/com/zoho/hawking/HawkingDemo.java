@@ -23,7 +23,6 @@ class HawkingDemo {
       DateTimeParser.timeParser ->
       calls all the individual components
 
-
       Every component requires this:
       String sentenceToParse, String sentenceTense, DateAndTime dateAndTime, AbstractLanguage abstractLanguage)
 
@@ -34,15 +33,13 @@ class HawkingDemo {
       DateAndTime (just put in new Date(null) i think)
       sentenceTense (look at CoreMlpUtils.java getTense for these just put in a random one)
       AbstractLanguage abstractLanguage = LanguageFactory.getLanguageImpl(lang); lang is "eng"
-
-
      */
     HawkingTimeParser parser = new HawkingTimeParser();
-    String inputText = "Good morning, Have a nice day. Shall we meet on December 20 ?";
+    String inputText = "Merry Christmas! It is December 25 today.";
     HawkingConfiguration hawkingConfiguration = new HawkingConfiguration();
     hawkingConfiguration.setFiscalYearStart(2);
     hawkingConfiguration.setFiscalYearEnd(1);
-    hawkingConfiguration.setTimeZone("IST");
+    hawkingConfiguration.setTimeZone("EDT");
     Date referenceDate = new Date();
     DatesFound datesFound = null;
     try {
