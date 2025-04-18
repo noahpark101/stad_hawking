@@ -60,8 +60,7 @@ public class HawkingTimeParser {
     public static Pair<ParserOutput, DateGroup> setDateAndTime(DateTimeProperties dateTimeProperties, AbstractLanguage abstractLanguage) {
         ParserOutput parserOutput = dateTimeProperties.getParserOutput();
         DateTimeEssentials dateTimeEssentials = dateTimeProperties.getDateTimeEssentials();
-        System.out.print("PRINTING OUT TENSE");
-        System.out.println(dateTimeProperties.getDateTimeEssentials().getTense());
+        System.out.println("Tense: " + dateTimeProperties.getDateTimeEssentials().getTense());
         DateAndTime dateAndTime = DateTimeParser.timeParser(
             dateTimeProperties.getReferenceTime() != null ? dateTimeProperties.getReferenceTime() : dateTimeEssentials.getReferenceTime(),
             dateTimeProperties.getDateTimeEssentials().getTense(),

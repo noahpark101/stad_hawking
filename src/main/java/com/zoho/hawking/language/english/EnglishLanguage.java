@@ -72,12 +72,9 @@ public class EnglishLanguage extends AbstractLanguage {
             List<Pair<Boolean, List<Triple<String, Integer, Integer>>>> singleDatesList = getSeparateDates(Parser.parse(sent));
             //System.out.println(singleDatesList);
             for (Pair<Boolean, List<Triple<String, Integer, Integer>>> relAndDate : singleDatesList) {
-                System.out.println("DateTimeEssentials contents:");
-                System.out.println(inputSentence);
-                System.out.println(sent);
-                System.out.println(relAndDate);
-                System.out.println(getTense(sent));
-                System.out.println(relAndDate);
+                System.out.println("Current sentence: " + sent);
+                System.out.println("\t" + relAndDate);
+                System.out.println("\tTense: " + getTense(sent));
                 //gets the triple
                 List<Triple<String, Integer, Integer>> triples = relAndDate.getRight();
                 DateTimeEssentials dateTimeEssentials = new DateTimeEssentials();
@@ -97,8 +94,8 @@ public class EnglishLanguage extends AbstractLanguage {
                     //get the text that holds the date information
                     String parsedText = sent.substring(startIndex, endIndex);
                     //gets the time offset, some dates/times are referenced like 20 seconds ago (this needs a reference time)
-                    System.out.println("TEMPORARY");
-                    System.out.println(parsedText);
+                    System.out.println("\tParsed text: " + parsedText);
+
                     DateTimeOffsetReturn dateTimeOffsetReturn = TimeZoneExtractor.referenceDateExtractor(referenceDate, config, parsedText);
                     if(!TimeZoneExtractor.isTimeZonePresent){
                         dateTimeOffsetReturn = TimeZoneExtractor.referenceDateExtractor(referenceDate, config, sent);

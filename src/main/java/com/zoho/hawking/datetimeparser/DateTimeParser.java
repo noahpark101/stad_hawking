@@ -26,10 +26,9 @@ public class DateTimeParser {
     private static DateTimeComponent getInstance(String span, String sentenceToParse, String sentenceTense, DateAndTime dateAndTime, AbstractLanguage abstractLanguage) {
         DateTimeComponent localDateTimeComponent = null;
         //ADDED:
-        System.out.println("getInstance input values:");
-        System.out.println(span);
-        System.out.println(sentenceToParse);
-        System.out.println(sentenceTense);
+        System.out.println("Current Span: " + span);
+        System.out.println("\t" + sentenceToParse);
+        System.out.println("\tTense: " + sentenceTense);
         switch (span) {
             case "year":
                 localDateTimeComponent = new YearParser(sentenceToParse, sentenceTense, dateAndTime, abstractLanguage);
