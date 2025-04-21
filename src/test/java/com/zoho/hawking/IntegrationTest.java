@@ -1,6 +1,25 @@
 package com.zoho.hawking;
 
+import com.zoho.hawking.datetimeparser.configuration.HawkingConfiguration;
+import com.zoho.hawking.language.english.model.DateRange;
+import com.zoho.hawking.language.english.model.DatesFound;
+import com.zoho.hawking.language.english.model.ParserOutput;
+import org.joda.time.DateTime;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class IntegrationTest {
+  private HawkingConfiguration hawkingConfiguration;
+  private HawkingTimeParser parser;
+  private Date referenceDate;
   /*
     High level overview
     HawkingTimeParser.predict()
@@ -19,4 +38,176 @@ public class IntegrationTest {
         Need more ideas.
 
    */
+
+  /**
+   * Gets the date given a Start or End line
+   * @param str the string in the following format: "Start/End : {Date}:{Time}"
+   * @return the Date
+   */
+  private String getDate(String str) {
+    List<String> ls = Arrays.asList(str.split("T"));
+    return ls.get(0);
+  }
+
+  /**
+   * Gets the time given a Start or End line
+   * @param str the string in the following format: "Start/End : {Date}:{Time}"
+   * @return the Time
+   */
+  private String getTime(String str) {
+    List<String> ls = Arrays.asList(str.split("T"));
+    return ls.get(1);
+  }
+
+
+  /*
+    HawkingTImeParser is tightly coupled together. Thus we are going to do black box integration testing. I shall
+    provide inputs to verify that certain components are working together like classification, segmentation, etc.
+   */
+
+  @BeforeEach
+  void setUp() {
+    hawkingConfiguration = new HawkingConfiguration();
+    parser = new HawkingTimeParser();
+    referenceDate = new Date(120, Calendar.DECEMBER, 1);
+  }
+
+  //Integration Tests for segmenting, classification, and DateTimeExtractor
+  @Test
+  @DisplayName("Standard Date Format 1: Month Day Year")
+  public void standardDateFormatOne() {
+    String inputText = "It is April 20 2025";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    ParserOutput output = datesFound.getParserOutputs().get(0);
+    //check date segmentation
+    assertEquals("April 20 2025", output.getText());
+    //check date classification
+    DateRange dateRange = output.getDateRange();
+    String end = getDate(dateRange.getEnd().toString());
+    assertEquals("2025-04-20", end);
+  }
+
+  //fails because segmentation fails to get portion of date within input string
+  @Test
+  @DisplayName("Standard Date Format 2: Day Month Year")
+  public void standardDateFormatTwo() {
+    String inputText = "It is 20 April 2025";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    ParserOutput output = datesFound.getParserOutputs().get(0);
+    //check date segmentation
+    assertEquals("20 April 2025", output.getText());
+    //check date classification
+    DateRange dateRange = output.getDateRange();
+    String end = getDate(dateRange.getEnd().toString());
+    assertEquals("2025-04-20", end);
+  }
+
+  //fails because DateTimeExtractor fails to parse date from string
+  @Test
+  @DisplayName("Standard Date Format 3: Month/Day/Year")
+  public void standardDateFormatThree() {
+    String inputText = "It is 04/20/2025";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    ParserOutput output = datesFound.getParserOutputs().get(0);
+    //check date segmentation
+    assertEquals("04/20/2025", output.getText());
+    //check date classification
+    DateRange dateRange = output.getDateRange();
+    String end = getDate(dateRange.getEnd().toString());
+    assertEquals("2025-04-20", end);
+  }
+
+  //fails because DateTimeExtractor fails to parse date from string
+  @Test
+  @DisplayName("Standard Date Format 4: Month-Day-Year")
+  public void standardDateFormatFour() {
+    String inputText = "It is 04-20-2025";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    ParserOutput output = datesFound.getParserOutputs().get(0);
+    //check date segmentation
+    assertEquals("04-20-2025", output.getText());
+    //check date classification
+    DateRange dateRange = output.getDateRange();
+    String end = getDate(dateRange.getEnd().toString());
+    assertEquals("2025-04-20", end);
+  }
+
+  //integration testing for DateRange calculation and segmentation/classification
+
+  //fails because date range misconfigures start date
+  @Test
+  @DisplayName("Date Range 1: Week")
+  public void dateRangeOne() {
+    String inputText = "Next week, I am going on vacation.";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    ParserOutput output = datesFound.getParserOutputs().get(0);
+    //check date segmentation
+    assertEquals("Next week", output.getText());
+    //check date range
+    DateRange dateRange = output.getDateRange();
+    String start = getDate(dateRange.getStart().toString());
+    String end = getDate(dateRange.getEnd().toString());
+    assertEquals("2020-12-01", start);
+    assertEquals("2020-12-08", end);
+  }
+
+  @Test
+  @DisplayName("Date Range 2: Day")
+  public void dateRangeTwo() {
+    String inputText = "In 5 days, I am going on vacation.";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    ParserOutput output = datesFound.getParserOutputs().get(0);
+    //check date segmentation
+    assertEquals("5 days", output.getText());
+    //check date range
+    DateRange dateRange = output.getDateRange();
+    String start = getDate(dateRange.getStart().toString());
+    String end = getDate(dateRange.getEnd().toString());
+    assertEquals("2020-12-01", start);
+    assertEquals("2020-12-06", end);
+  }
+
+  //fails because date range considers a month 30 days without considering reference month
+  @Test
+  @DisplayName("Date Range 3: Month")
+  public void dateRangeThree() {
+    String inputText = "Next month, I am going on vacation.";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    ParserOutput output = datesFound.getParserOutputs().get(0);
+    //check date segmentation
+    assertEquals("Next month", output.getText());
+    //check date range
+    DateRange dateRange = output.getDateRange();
+    String start = getDate(dateRange.getStart().toString());
+    String end = getDate(dateRange.getEnd().toString());
+    assertEquals("2020-12-01", start);
+    assertEquals("2020-01-01", end);
+  }
+
+  //fails because date range miscalculates a year as 30 days
+  @Test
+  @DisplayName("Date Range 4: Year")
+  public void dateRangeYear() {
+    String inputText = "Next year, I am going on vacation.";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    ParserOutput output = datesFound.getParserOutputs().get(0);
+    //check date segmentation
+    assertEquals("Next year", output.getText());
+    //check date range
+    DateRange dateRange = output.getDateRange();
+    String start = getDate(dateRange.getStart().toString());
+    String end = getDate(dateRange.getEnd().toString());
+    assertEquals("2020-12-01", start);
+    assertEquals("2021-12-01", end);
+  }
+
+
 }
