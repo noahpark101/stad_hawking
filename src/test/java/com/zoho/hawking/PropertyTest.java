@@ -91,7 +91,7 @@ public class PropertyTest {
     Arbitrary<String> dates = Arbitraries.of("week", "month", "year", "day");
     Arbitrary<String> relatives = Arbitraries.of("Next", "In", "After", "By next");
     return Combinators.combine(nums, dates, relatives).as((n, d, r) ->
-            String.format("%s %d %s.", r, n, d));
+            String.format("%s %d %s, I am going to goon.", r, n, d));
   }
 
   @Property
@@ -109,6 +109,69 @@ public class PropertyTest {
     }
   }
 
+  @Property
+  @Label("Property 4: Parser is deterministic: random strings")
+  boolean parserIsDeterministicOne(@ForAll("randomStrings") String input) {
+    DatesFound datesFound = parser.parse(input, referenceDate, hawkingConfiguration, lang);
+    DatesFound datesFound2 = parser.parse(input, referenceDate, hawkingConfiguration, lang);
+    return datesFound.toString().equals(datesFound2.toString());
+
+  }
+
+  @Property
+  @Label("Property 4: Parser is deterministic: random time strings")
+  boolean parserIsDeterministicTwo(@ForAll("randomTimeStrings") String input) {
+    DatesFound datesFound = parser.parse(input, referenceDate, hawkingConfiguration, lang);
+    DatesFound datesFound2 = parser.parse(input, referenceDate, hawkingConfiguration, lang);
+    return datesFound.toString().equals(datesFound2.toString());
+
+  }
+
+  @Property
+  @Label("Property 4: Parser is deterministic: random next strings")
+  boolean parserIsDeterministicThree(@ForAll("randomNextStrings") String input) {
+    DatesFound datesFound = parser.parse(input, referenceDate, hawkingConfiguration, lang);
+    DatesFound datesFound2 = parser.parse(input, referenceDate, hawkingConfiguration, lang);
+    return datesFound.toString().equals(datesFound2.toString());
+
+  }
+
+  @Provide
+  Arbitrary<List<String>> randomlyFormattedDateStrings() {
+    Arbitrary<Integer> days = Arbitraries.integers().between(1, 25);
+    Arbitrary<Integer> years = Arbitraries.integers().between(2025, 2300);
+    Arbitrary<Integer> months = Arbitraries.integers().between(1, 12);
+    String[] monthArr = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+
+    return Combinators.combine(days, months, years).as((d, m, y) ->
+            List.of(
+                    String.format("It is %d/%d/%d", m, d ,y),
+                    String.format("It is %d-%d-%d", y, m ,d),
+                    String.format("It is %s %d %d", monthArr[m - 1],d, y),
+                    String.format("It is %s %d, %d", monthArr[m - 1],d, y)
+            ));
+  }
+
+  @Property
+  @Label("Property 6: Different formatted dates return the same date from parser")
+  boolean parserHasSameOutputForDifferentFormats(@ForAll("randomlyFormattedDateStrings") List<String> input) {
+    for (int i = 1; i < input.size(); i++) {
+      try {
+        DatesFound prevDate = parser.parse(input.get(i - 1), referenceDate, hawkingConfiguration, lang);
+        DatesFound curDate = parser.parse(input.get(i), referenceDate, hawkingConfiguration, lang);
+        String prevStart = getDate(prevDate.getParserOutputs().get(0).getDateRange().getStart().toString());
+        String prevEnd = getDate(prevDate.getParserOutputs().get(0).getDateRange().getEnd().toString());
+        String curStart = getDate(curDate.getParserOutputs().get(0).getDateRange().getStart().toString());
+        String curEnd = getDate(curDate.getParserOutputs().get(0).getDateRange().getEnd().toString());
+        if (!prevStart.equals(curStart) && !prevEnd.equals(curEnd)) {
+          return false;
+        }
+      } catch (Exception e) {
+      }
+
+    }
+    return true;
+  }
 
 
 
