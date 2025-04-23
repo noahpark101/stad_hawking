@@ -49,6 +49,7 @@ public class MonthParser extends DateTimeComponent {
             isSet = true;
         } else if (getTagMap().containsKey(Constants.MONTH_SPAN_TAG)) {
             timeSpan = getTagMap().get(Constants.MONTH_SPAN_TAG);
+        // For months, this is essentially an else statement, can't achieve full BC for this method
         } else if (getTagMap().containsKey(Constants.MONTH_OF_YEAR_TAG)) {
             timeSpan = getTagMap().get(Constants.MONTH_OF_YEAR_TAG);
             nthMonthOfYear = super.abstractLanguage.monthsOfYear.getOrDefault(timeSpan, 0);
@@ -189,6 +190,7 @@ public class MonthParser extends DateTimeComponent {
         if (isExactTimeSpan) {
             exactSpan("PRESENT"); //No I18N
         } else {
+            // Could not find a case
             dateAndTime.setDateAndTime(DateTimeManipulation.addMonths(dateAndTime.getDateAndTime(), 0, implicitPrefix.equals("of") ? monthSpan - 1 : monthSpan));
             DateTimeManipulation.setMonthSpanStartAndEndTime(dateAndTime, -monthSpan, 0, isImmediate);
         }
