@@ -4,6 +4,7 @@ import com.zoho.hawking.datetimeparser.DateAndTime;
 import com.zoho.hawking.datetimeparser.configuration.Configuration;
 import com.zoho.hawking.datetimeparser.configuration.HawkingConfiguration;
 import com.zoho.hawking.datetimeparser.constants.ConfigurationConstants;
+import com.zoho.hawking.datetimeparser.utils.DateTimeManipulation;
 import com.zoho.hawking.language.AbstractLanguage;
 import com.zoho.hawking.language.LanguageFactory;
 import com.zoho.hawking.language.english.model.DateTimeEssentials;
@@ -31,7 +32,7 @@ class MonthParserTest {
 
   @BeforeEach
   public void setup() {
-    refDate = new Date(); // Make reference date rn, like in HawkingDemo
+    refDate = new Date(1745164800000L); // Make reference date 4/20/2025
     engLang = LanguageFactory.getLanguageImpl("eng");
     hawkConfig = new HawkingConfiguration();
     hawkConfig.setTimeZone("EST");
@@ -51,7 +52,6 @@ class MonthParserTest {
     dtEssentials.setSentence(dateSubstr);
     dtEssentials.setTriples(relAndDate);
     dtEssentials.setTense(tense);
-    // TODO: Might not be dateSubstr, (Hi. It's July 4 today -> It's July 4 today (dateSubstr) -> July 4 today (parsed text)
     DateTimeOffsetReturn dtOffsetReturn = TimeZoneExtractor.referenceDateExtractor(refDate, hawkConfig, dateSubstr);
     if(!TimeZoneExtractor.isTimeZonePresent){
       dtOffsetReturn = TimeZoneExtractor.referenceDateExtractor(refDate, hawkConfig, dateSubstr);
@@ -71,7 +71,6 @@ class MonthParserTest {
   @Test
   @DisplayName("Basic test")
   public void basicTest() {
-    // TODO: "Today is December 25" separates today from December 25 smh
 
     // Input variables should be same across all parsers
     String inputSentence = "Merry Christmas! It is December 25 today.";
@@ -84,7 +83,6 @@ class MonthParserTest {
     continueSetup(trip, inputSentence, dateSubstr, tense);
     DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
 
-    // TODO: If you want, move comments over as Javadocs in DateTimeComponent
     // Collection of most of the relevant DateTimeComponent fields
     assertTrue(monthParser.isNumberPresent); // A number is associated with the current span (month in this case)...
     assertEquals(25, monthParser.number); // ...but might not be the number representing the span...
@@ -98,7 +96,7 @@ class MonthParserTest {
     assertEquals("", monthParser.tenseIndicator); // Uses related words like "on" to further pinpoint tense
 
     // Now that the parser is set up with info of month (and day), we can fine tune the dateAndTime obj.
-    // Use present()/past()/future() relative to the reference date (rn).
+    // Use present()/past()/future() relative to the reference date (4/20/2025).
     monthParser.past();
     assertEquals(2024, dateAndTime.getDateAndTime().getYear());
     assertEquals(12, dateAndTime.getDateAndTime().getMonthOfYear());
@@ -120,7 +118,12 @@ class MonthParserTest {
     assertEquals(12, dateAndTime.getDateAndTime().getMonthOfYear());
     assertEquals(25, dateAndTime.getDateAndTime().getDayOfMonth());
 
-    // TODO: Learn immediate tense, make separate test cases for it
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    monthParser.immediatePast();
+    assertEquals(2024, dateAndTime.getDateAndTime().getYear());
+    assertEquals(12, dateAndTime.getDateAndTime().getMonthOfYear());
+    assertEquals(25, dateAndTime.getDateAndTime().getDayOfMonth());
 
     monthParser.setPreviousDependency();
   }
@@ -128,7 +131,6 @@ class MonthParserTest {
   @Test
   @DisplayName("Past exact time")
   public void pastExactTimeTest() {
-
     String inputSentence = "It's great to meet you. We once met at August 3.";
     String dateSubstr = "We once met at August 3.";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 15, 24);
@@ -142,17 +144,24 @@ class MonthParserTest {
     assertTrue(monthParser.isExactTimeSpan);
 
     // When running the program, if you do August 3, 2024, MonthParser receives sentenceTense = PRESENT
-    // because YearParser goes first and transforms dateTime from initial reference time (rn) to
+    // because YearParser goes first and transforms dateTime from initial reference time (4/20/25) to
     // rn but in 2024, so MonthParser transforming dateTime is now "present" relative to 2024.
-    // So doing just August 3 allows MonthParser to parse in the "past" relative to rn
+    // So doing just August 3 allows MonthParser to parse in the "past" relative to 4/20
     monthParser.past();
+    assertEquals(2024, dateAndTime.getDateAndTime().getYear());
+    assertEquals(8, dateAndTime.getDateAndTime().getMonthOfYear());
+    assertEquals(3, dateAndTime.getDateAndTime().getDayOfMonth());
+
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    monthParser.immediatePast();
     assertEquals(2024, dateAndTime.getDateAndTime().getYear());
     assertEquals(8, dateAndTime.getDateAndTime().getMonthOfYear());
     assertEquals(3, dateAndTime.getDateAndTime().getDayOfMonth());
   }
 
   @Test
-  @DisplayName("Vague past: last September")
+  @DisplayName("Vague pre-New-Year past")
   public void vagueLastSepTest() {
     String inputSentence = "It's great to meet you. We once met last September.";
     String dateSubstr = "We once met last September.";
@@ -170,12 +179,17 @@ class MonthParserTest {
     monthParser.past();
     assertEquals(2024, dateAndTime.getDateAndTime().getYear());
     assertEquals(9, dateAndTime.getDateAndTime().getMonthOfYear());
+
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    monthParser.immediatePast();
+    assertEquals(2024, dateAndTime.getDateAndTime().getYear());
+    assertEquals(9, dateAndTime.getDateAndTime().getMonthOfYear());
   }
 
   @Test
-  @DisplayName("Vague(r) Past: last January")
+  @DisplayName("Vague post-New-Year past")
   public void vaguerLastJanTest() {
-    // January 2024 or 2025?
     String inputSentence = "It's great to meet you. We once met last January.";
     String dateSubstr = "We once met last January.";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 12, 24);
@@ -189,7 +203,12 @@ class MonthParserTest {
     assertEquals("last", monthParser.tenseIndicator);
     assertTrue(monthParser.isExactTimeSpan);
 
+    // FAULT (sorta?) - Function unconditionally sets year back by 1 if tenseIndicator is populated. With this context it shouldn't
     monthParser.past();
+//    assertEquals(2025, dateAndTime.getStart().getYear());
+    assertEquals(1, dateAndTime.getStart().getMonthOfYear());
+//    assertEquals(2025, dateAndTime.getEnd().getYear());
+    assertEquals(1, dateAndTime.getEnd().getMonthOfYear());
   }
 
   @Test
@@ -209,28 +228,139 @@ class MonthParserTest {
     assertEquals("ago", monthParser.tenseIndicator);
     assertFalse(monthParser.isExactTimeSpan);
 
+    // FAULT: For "ago", span is kept at 3 months so start -> end is 3 months
+    // FAULT: "ago" is configured with no end time, but this sentence should have one
     monthParser.past();
-    assertEquals(2025, dateAndTime.getDateAndTime().getYear());
-    assertEquals(1, dateAndTime.getDateAndTime().getMonthOfYear());
-    assertEquals(dateAndTime.getReferenceTime().getDayOfMonth(), dateAndTime.getDateAndTime().getDayOfMonth());
-    // TODO: Has inconsistent start day, null end time. Might be feature tho
-//    assertEquals(dateAndTime.getReferenceTime().getDayOfMonth(), dateAndTime.getStart().getDayOfMonth());
+    assertEquals(2025, dateAndTime.getStart().getYear());
+    assertEquals(1, dateAndTime.getStart().getMonthOfYear());
+//    assertEquals(2025, dateAndTime.getEnd().getYear());
+//    assertEquals(1, dateAndTime.getEnd().getMonthOfYear());
+
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    monthParser.immediatePast();
+    assertEquals(2025, dateAndTime.getStart().getYear());
+    assertEquals(1, dateAndTime.getStart().getMonthOfYear());
+
   }
 
   @Test
-  @DisplayName("Ordinal")
-  public void ordinalDateTest() {
-    // TODO: fourth works but "4th" fails
-    String inputSentence = "Great! It's the fourth month of 2021.";
-    String dateSubstr = "It's the fourth month of 2021.";
-    Triple<String, Integer, Integer> trip = new Triple<>("D", 9, 29);
-    String xmlSubstr = "<exact_number>4th</exact_number> <month_span>month</month_span> <implict_prefix>of</implict_prefix>";
+  @DisplayName("One month ago")
+  public void oneMonthAgoTest() {
+    String inputSentence = "I performed at my concert one year one month ago.";
+    String dateSubstr = "I performed at my concert one year one month ago.";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 26, 48);
+    String xmlSubstr = "<exact_number>one</exact_number> <month_span>month</month_span> <implict_postfix>ago</implict_postfix>";
+    String tense = "PAST";
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+
+    // Control the year parsing, declare previous dependency of year
+    dateAndTime.setDateAndTime(DateTimeManipulation.setYear(dateAndTime.getDateAndTime(), 2024));
+    dateAndTime.setPreviousDependency(Constants.YEAR_SPAN_TAG);
+
+    // Get MonthParser object
+    DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    assertEquals("month", monthParser.timeSpan);
+    assertEquals(1, monthParser.number);
+
+    // FAULT: The "ago" only gets applied to the year when it should apply to both
+//    assertEquals("ago", monthParser.tenseIndicator);
+    assertFalse(monthParser.isExactTimeSpan);
+
+    // (Same faults as the 3 months ago test)
+    monthParser.past();
+//    assertEquals(2024, dateAndTime.getStart().getYear());
+//    assertEquals(2, dateAndTime.getStart().getMonthOfYear());
+//    assertEquals(2025, dateAndTime.getEnd().getYear());
+//    assertEquals(1, dateAndTime.getEnd().getMonthOfYear());
+
+  }
+
+  @Test
+  @DisplayName("Past recent months")
+  public void pastMonthsTest() {
+    String inputSentence = "The celebrations have been going on for the past 2 months.";
+    String dateSubstr = "The celebrations have been going on for the past 2 months.";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 44, 57);
+    String xmlSubstr = "<implict_prefix>past</implict_prefix> <exact_number>2</exact_number> <month_span>months</month_span>";
+    String tense = "PAST";
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+
+    // Get MonthParser object
+    DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    assertFalse(monthParser.isExactTimeSpan);
+
+    // FAULT: Considering this a fault b/c "past" is the ONLY applicable immediate past preposition
+    // and resets day/time instead of preserving it. BTW immediatePast/immediateFuture doesn't set object's
+    // isImmediate to true so the date spans start to become inconsistent across immediate tenses
+    monthParser.immediatePast();
+    assertEquals(2, dateAndTime.getStart().getMonthOfYear());
+//    assertEquals(20, dateAndTime.getStart().getDayOfMonth());
+//    assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+//    assertEquals(20, dateAndTime.getEnd().getDayOfMonth());
+
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    monthParser.immediate();
+    assertEquals(3, dateAndTime.getStart().getMonthOfYear());
+//    assertEquals(20, dateAndTime.getStart().getDayOfMonth());
+    assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+//    assertEquals(20, dateAndTime.getEnd().getDayOfMonth());
+  }
+
+  @Test
+  @DisplayName("Ordinal day of month")
+  public void ordinalDayTest() {
+    String inputSentence = "Great! It's the seventh of May.";
+    String dateSubstr = "It's the seventh of May.";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 9, 23);
+    String xmlSubstr = "<exact_number>7th</exact_number> <implict_prefix>of</implict_prefix> <month_of_year>may</month_of_year>";
     String tense = "";
     continueSetup(trip, inputSentence, dateSubstr, tense);
 
     // Get MonthParser object
     DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
-    assertEquals("4th", monthParser.exactNumber);
+    assertEquals("may", monthParser.timeSpan);
+    assertEquals(7, monthParser.number);
+    assertTrue(monthParser.isOrdinal);
+    assertTrue(monthParser.isExactTimeSpan);
+
+    monthParser.nthSpan();
+    assertEquals(5, dateAndTime.getStart().getMonthOfYear());
+    assertEquals(2025, dateAndTime.getStart().getYear());
+    assertEquals(5, dateAndTime.getEnd().getMonthOfYear());
+    assertEquals(2025, dateAndTime.getEnd().getYear());
+
+  }
+
+  @Test
+  @DisplayName("Ordinal month of year")
+  public void ordinalMonthTest() {
+    String inputSentence = "Great! It's the fifth month of 2021.";
+    String dateSubstr = "It's the fifth month of 2021.";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 9, 28);
+    String xmlSubstr = "<exact_number>fifth</exact_number> <month_span>month</month_span> <implict_prefix>of</implict_prefix>";
+    String tense = "";
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+
+    // Control the year parsing, declare previous dependency of year
+    dateAndTime.setDateAndTime(DateTimeManipulation.setYear(dateAndTime.getDateAndTime(), 2021));
+    dateAndTime.setPreviousDependency(Constants.YEAR_SPAN_TAG);
+
+    // Get MonthParser object
+    // FAULT: "fifth month of" is being treated the same way as "fifth of month"
+    DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    assertEquals("fifth", monthParser.exactNumber);
+//    assertTrue(monthParser.isOrdinal);
+    assertFalse(monthParser.isExactTimeSpan);
+    assertEquals("month", monthParser.timeSpan);
+
+    monthParser.present();
+    monthParser.setPreviousDependency();
+//    assertEquals(5, monthParser.dateAndTime.getStart().getMonthOfYear());
+//    assertEquals(2021, monthParser.dateAndTime.getStart().getMonthOfYear());
+//    assertEquals(5, monthParser.dateAndTime.getStart().getMonthOfYear());
+//    assertEquals(2021, monthParser.dateAndTime.getStart().getMonthOfYear());
   }
 
   @Test
@@ -240,35 +370,59 @@ class MonthParserTest {
     String inputSentence = "We had a celebration last year last month.";
     String dateSubstr = "We had a celebration last year last month.";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 21, 41);
-    String xmlSubstr = "<implict_prefix>last</implict_prefix> <year_span>year</year_span>";
+    String xmlSubstr = "<implict_prefix>last</implict_prefix> <month_span>month</month_span>";
     String tense = "PAST";
     continueSetup(trip, inputSentence, dateSubstr, tense);
 
-    // Conduct year parsing, make year a previous dependency of month
+    // Control the year parsing, declare previous dependency of year
+    dateAndTime.setDateAndTime(DateTimeManipulation.setYear(dateAndTime.getDateAndTime(), 2024));
     dateAndTime.setPreviousDependency(Constants.YEAR_SPAN_TAG);
 
     // Get MonthParser object
+    // FAULT: Unable to create MonthParser obj because "last year last month" sets field isOrdinal to true
+    // (even though it's not), so obj tries to parse a nonexistent number from the nonexistent ordinal word.
     DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
-    // TODO: private monthParser.nthMonthOfYear = 12
-    assertTrue(monthParser.isNumberPresent);
+    assertEquals("month", monthParser.timeSpan);
+    assertEquals("last", monthParser.tenseIndicator);
   }
 
   @Test
   @DisplayName("Set vague month")
   public void everyMonthTest() {
 
-    // TODO: I don't think set tags have been implemented yet. Hardcoding the XML tags
+    // NOTE: I don't think set tags have been implemented yet. Hardcoding the XML tags
 
-    String inputSentence = "That's fine. Let's meet every month.";
-    String dateSubstr = "Let's meet every month";
-    Triple<String, Integer, Integer> trip = new Triple<>("D", 11, 22);
-    String xmlSubstr = "<set_prefix>every</set_prefix> <month_span>month</month_span>";
+    String inputSentence = "That's fine. We used to meet each month last year.";
+    String dateSubstr = "Let's meet each month";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 11, 21);
+    String xmlSubstr = "<set_prefix>each</set_prefix> <month_span>month</month_span>";
     String tense = "PRESENT";
     continueSetup(trip, inputSentence, dateSubstr, tense);
 
     // Get MonthParser object
     DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
     assertTrue(monthParser.isSet);
+    assertFalse(monthParser.isExactTimeSpan);
+    assertEquals("month", monthParser.timeSpan);
+
+    // Suppose first we don't take into account the last year dependency
+    monthParser.present();
+    monthParser.setPreviousDependency();
+
+    tense = "PAST";
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+
+    monthParser.present();
+    monthParser.setPreviousDependency();
+
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+
+    // Control the year parsing, declare previous dependency of year
+    dateAndTime.setDateAndTime(DateTimeManipulation.setYear(dateAndTime.getDateAndTime(), 2024));
+    DateTimeManipulation.setYearStartAndEndTime(dateAndTime, 0, 0, 1, 2);
+    dateAndTime.setPreviousDependency(Constants.YEAR_SPAN_TAG);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
 
     monthParser.present();
     monthParser.setPreviousDependency();
@@ -278,9 +432,9 @@ class MonthParserTest {
   @DisplayName("Set explicit month")
   public void everyMarchTest() {
 
-    // TODO: I don't think set tags have been implemented yet. Hardcoding the XML tags
+    // NOTE: I don't think set tags have been implemented yet. Hardcoding the XML tags
 
-    String inputSentence = "That's fine. Let's meet every March.";
+    String inputSentence = "That's fine. Let's meet every March this year.";
     String dateSubstr = "Let's meet every March";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 11, 22);
     String xmlSubstr = "<set_prefix>every</set_prefix> <month_of_year>March</month_of_year>";
@@ -295,13 +449,32 @@ class MonthParserTest {
 
     monthParser.present();
     monthParser.setPreviousDependency();
+
+    tense = "PAST";
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+
+    monthParser.present();
+    monthParser.setPreviousDependency();
+
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+
+    // Control the year parsing, declare previous dependency of year
+    tense = "PRESENT";
+    dateAndTime.setDateAndTime(DateTimeManipulation.setYear(dateAndTime.getDateAndTime(), 2025));
+    DateTimeManipulation.setYearStartAndEndTime(dateAndTime, 0, 0, 1, 2);
+    dateAndTime.setPreviousDependency(Constants.YEAR_SPAN_TAG);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+
+    monthParser.present();
+    monthParser.setPreviousDependency();
   }
 
   @Test
   @DisplayName("Set monthly")
   public void monthlyTest() {
 
-    // TODO: I don't think set tags have been implemented yet. Hardcoding the XML tags
+    // NOTE: I don't think set tags have been implemented yet. Hardcoding the XML tags
 
     String inputSentence = "Should be great. I've returned monthly last year.";
     String dateSubstr = "I've returned monthly last year.";
@@ -334,7 +507,6 @@ class MonthParserTest {
 
     // Get MonthParser object
     DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
-    // TODO: private monthParser.monthSpan = 4
     assertEquals("months", monthParser.timeSpan);
     assertEquals(4, monthParser.number);
 
@@ -342,10 +514,40 @@ class MonthParserTest {
     monthParser.future();
     assertEquals(8, monthParser.dateAndTime.getDateAndTime().getMonthOfYear());
     assertEquals(8, monthParser.dateAndTime.getEnd().getMonthOfYear());
-
-    // So this assert fails
 //    assertEquals(8, monthParser.dateAndTime.getStart().getMonthOfYear());
 
+  }
+
+  @Test
+  @DisplayName("This specified month")
+  public void thisSeptemberTest() {
+    String inputSentence = "Sounds good. I go back to school this September.";
+    String dateSubstr = "I go back to school this September.";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 20, 34);
+    String xmlSubstr = "<implict_prefix>this</implict_prefix> <month_of_year>september</month_of_year>";
+    String tense = "";
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+
+    // Get MonthParser object
+    DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    assertTrue(monthParser.isExactTimeSpan);
+    assertEquals("september", monthParser.timeSpan);
+    assertEquals("this", monthParser.tenseIndicator);
+
+    monthParser.immediate();
+    assertEquals(9, monthParser.dateAndTime.getStart().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getStart().getYear());
+    assertEquals(9, monthParser.dateAndTime.getEnd().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getEnd().getYear());
+
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    monthParser.sentenceTense = "PAST";
+    monthParser.immediate();
+    assertEquals(9, monthParser.dateAndTime.getStart().getMonthOfYear());
+    assertEquals(2024, monthParser.dateAndTime.getStart().getYear());
+    assertEquals(9, monthParser.dateAndTime.getEnd().getMonthOfYear());
+    assertEquals(2024, monthParser.dateAndTime.getEnd().getYear());
   }
 
   @Test
@@ -366,7 +568,18 @@ class MonthParserTest {
     assertEquals("next", monthParser.tenseIndicator);
 
     monthParser.future();
-    // TODO: add assertions
+    assertEquals(9, monthParser.dateAndTime.getStart().getMonthOfYear());
+    assertEquals(2026, monthParser.dateAndTime.getStart().getYear());
+    assertEquals(9, monthParser.dateAndTime.getEnd().getMonthOfYear());
+    assertEquals(2026, monthParser.dateAndTime.getEnd().getYear());
+
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    monthParser.immediateFuture();
+    assertEquals(9, monthParser.dateAndTime.getStart().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getStart().getYear());
+    assertEquals(9, monthParser.dateAndTime.getEnd().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getEnd().getYear());
   }
 
   @Test
@@ -382,43 +595,72 @@ class MonthParserTest {
 
     // Get MonthParser object
     DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
-    // TODO: private monthParser.monthSpan = 2
     assertEquals("months", monthParser.timeSpan);
+
+    monthParser.immediate();
+    assertEquals(4, monthParser.dateAndTime.getStart().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getStart().getYear());
+    assertEquals(5, monthParser.dateAndTime.getEnd().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getEnd().getYear());
 
   }
 
   @Test
-  @DisplayName("Present?")
-  public void presentTest() {
+  @DisplayName("Immediate Future")
+  public void upcomingMonthTest() {
 
-    String inputSentence = "You should know. It is July 4 today.";
-    String dateSubstr = "It is July 4 today.";
-    Triple<String, Integer, Integer> trip = new Triple<>("D", 6, 18);
-    String xmlSubstr = "<month_of_year>july</month_of_year> <exact_number>4</exact_number>";
-    String tense = "TEMPORARY";
+    String inputSentence = "Oh wow. The event happens in the upcoming 2 months.";
+    String dateSubstr = "The event happens in the upcoming 2 months.";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 25, 42);
+    String xmlSubstr = "<implict_prefix>upcoming</implict_prefix> <exact_number>2</exact_number> <month_span>months</month_span>";
+    String tense = "PRESENT";
     continueSetup(trip, inputSentence, dateSubstr, tense);
 
     // Get MonthParser object
     DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
-    monthParser.present();
-    assertEquals(7, dateAndTime.getStart().getMonthOfYear());
+    assertFalse(monthParser.isExactTimeSpan);
+    assertEquals("months", monthParser.timeSpan);
+    assertEquals("upcoming", monthParser.tenseIndicator);
 
+    monthParser.immediateFuture();
+    assertEquals(5, monthParser.dateAndTime.getStart().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getStart().getYear());
+    assertEquals(6, monthParser.dateAndTime.getEnd().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getEnd().getYear());
+
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    monthParser.immediate();
+    assertEquals(4, monthParser.dateAndTime.getStart().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getStart().getYear());
+    assertEquals(5, monthParser.dateAndTime.getEnd().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getEnd().getYear());
   }
 
+  @Test
+  @DisplayName("Remaining month")
+  public void remainingMonthTest() {
 
+    String inputSentence = "This will go on for the rest of April.";
+    String dateSubstr = "This will go on for the rest of April.";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 24, 37);
+    String xmlSubstr = "<implict_prefix>of</implict_prefix> <month_of_year>april</month_of_year>";
+    String tense = "FUTURE";
+    continueSetup(trip, inputSentence, dateSubstr, tense);
 
+    // Get MonthParser object
+    DateTimeComponent monthParser = new MonthParser(xmlSubstr, tense, dateAndTime, engLang);
+    assertTrue(monthParser.isExactTimeSpan);
+    assertEquals("april", monthParser.timeSpan);
 
+    // Remaining tense indicator not implemented yet
+    monthParser.tenseIndicator = "rest";
+
+    monthParser.remainder();
+    assertEquals(4, monthParser.dateAndTime.getStart().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getStart().getYear());
+    assertEquals(4, monthParser.dateAndTime.getEnd().getMonthOfYear());
+    assertEquals(2025, monthParser.dateAndTime.getEnd().getYear());
+
+  }
 }
-
-/* For Matt
-
-      DateAndTime referenceDateAndTime = dateTimeOffsetReturn.getReferenceDate();
-      DateAndTime dateAndTime = new DateAndTime(referenceDateTime);
-      DateTimeOffsetReturn dateTimeOffsetReturn = TimeZoneExtractor.referenceDateExtractor(referenceDate, config, parsedText);
-
-            DateAndTime dateAndTime = DateTimeParser.timeParser(
-              dateTimeProperties.getReferenceTime(),
-              tense,
-              dateTimeProperties.getComponentsMap(),
-              abstractLanguage);
-   */

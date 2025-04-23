@@ -35,21 +35,19 @@ class HawkingDemo {
       AbstractLanguage abstractLanguage = LanguageFactory.getLanguageImpl(lang); lang is "eng"
      */
     HawkingTimeParser parser = new HawkingTimeParser();
-    String inputText = "The meeting will start at exactly 5 minutes.";
+    String inputText = "Oh I see. It is in a few days.";
     HawkingConfiguration hawkingConfiguration = new HawkingConfiguration();
-    hawkingConfiguration.setFiscalYearStart(2);
-    hawkingConfiguration.setFiscalYearEnd(1);
     hawkingConfiguration.setTimeZone("EDT");
-    Date referenceDate = new Date();
+    Date referenceDate = new Date(1745164800000L); // 4/20/2025
     DatesFound datesFound = null;
     try {
-      datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng"); //No I18N
+      datesFound = parser.parse(inputText,
+              referenceDate, hawkingConfiguration, "eng");
     } catch (Exception e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
     assert datesFound != null;
-    LOGGER.info("DATES FOUND ::  "+ datesFound.toString());
+    LOGGER.info("DATES FOUND ::  " + datesFound.toString());
   }
 
 }

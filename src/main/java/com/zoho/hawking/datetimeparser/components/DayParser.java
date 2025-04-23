@@ -35,6 +35,7 @@ public class DayParser extends DateTimeComponent {
             timeSpan = getTagMap().get(Constants.DAY_OF_WEEK_TAG);
             isExactTimeSpan = true;
             timeSpanValue = super.abstractLanguage.daysOfWeek.getOrDefault(timeSpan, 0);
+        // For days, this is essentially an else statement, can't achieve full BC for this method
         } else if (getTagMap().containsKey(Constants.SET_DAY_TAG)) {
             timeSpan = getTagMap().get(Constants.SET_DAY_TAG);
             isSet = true;

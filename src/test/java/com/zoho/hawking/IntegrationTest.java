@@ -20,6 +20,7 @@ public class IntegrationTest {
   private HawkingConfiguration hawkingConfiguration;
   private HawkingTimeParser parser;
   private Date referenceDate;
+  private String defaultStartDate;
   /*
     High level overview
     HawkingTimeParser.predict()
@@ -70,6 +71,7 @@ public class IntegrationTest {
     hawkingConfiguration = new HawkingConfiguration();
     parser = new HawkingTimeParser();
     referenceDate = new Date(120, Calendar.DECEMBER, 1);
+    defaultStartDate = "2020-12-01";
   }
 
   //Integration Tests for segmenting, classification, and DateTimeExtractor
@@ -210,6 +212,72 @@ public class IntegrationTest {
   }
 
   //Integration testing for multidate segmentation (EnglishLanguage.getSeparateDates() + HawkingTimeParser.predict())
+  @Test
+  @DisplayName("MultiDate: 2 dates")
+  public void multiDateTwoDates() {
+    String inputText = "In 5 days, Robert is going on vacation. In 10 days, Elizabeth is leaving her family.";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    String[] segments = {"5 days", "10 days"};
+    String[] endDates = {"2020-12-06", "2020-12-11"};
+    assertEquals(2, datesFound.getParserOutputs().size());
+    for (int i = 0; i < datesFound.getParserOutputs().size(); i++) {
+      ParserOutput output = datesFound.getParserOutputs().get(i);
+      //check segments
+      assertEquals(segments[i], output.getText());
+      DateRange dateRange = output.getDateRange();
+      //check date ranges
+      String start = getDate(dateRange.getStart().toString());
+      String end = getDate(dateRange.getEnd().toString());
+      assertEquals(defaultStartDate, start);
+      assertEquals(endDates[i], end);
+    }
+  }
 
+  @Test
+  @DisplayName("MultiDate: 3 dates")
+  public void multiDateThreeDates() {
+    String inputText =
+            "In 5 days, Robert is going on vacation. In 10 days, Elizabeth is leaving her family. In 6 days, I am leaving.";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    String[] segments = {"5 days", "10 days", "6 days"};
+    String[] endDates = {"2020-12-06", "2020-12-11", "2020-12-07"};
+    assertEquals(3, datesFound.getParserOutputs().size());
+    for (int i = 0; i < datesFound.getParserOutputs().size(); i++) {
+      ParserOutput output = datesFound.getParserOutputs().get(i);
+      //check segments
+      assertEquals(segments[i], output.getText());
+      DateRange dateRange = output.getDateRange();
+      //check date ranges
+      String start = getDate(dateRange.getStart().toString());
+      String end = getDate(dateRange.getEnd().toString());
+      assertEquals(defaultStartDate, start);
+      assertEquals(endDates[i], end);
+    }
+  }
+
+  @Test
+  @DisplayName("MultiDate: 4 dates")
+  public void multiDateFourDates() {
+    String inputText =
+            "In 5 days, Robert is going on vacation. In 10 days, Elizabeth is leaving her family. In 6 days, I am leaving. In 15 days, Robert is getting a new car.";
+    hawkingConfiguration.setTimeZone("EDT");
+    DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    String[] segments = {"5 days", "10 days", "6 days", "15 days"};
+    String[] endDates = {"2020-12-06", "2020-12-11", "2020-12-07", "2020-12-16"};
+    assertEquals(4, datesFound.getParserOutputs().size());
+    for (int i = 0; i < datesFound.getParserOutputs().size(); i++) {
+      ParserOutput output = datesFound.getParserOutputs().get(i);
+      //check segments
+      assertEquals(segments[i], output.getText());
+      DateRange dateRange = output.getDateRange();
+      //check date ranges
+      String start = getDate(dateRange.getStart().toString());
+      String end = getDate(dateRange.getEnd().toString());
+      assertEquals(defaultStartDate, start);
+      assertEquals(endDates[i], end);
+    }
+  }
 
 }
