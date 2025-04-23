@@ -35,7 +35,7 @@ class HawkingDemo {
       AbstractLanguage abstractLanguage = LanguageFactory.getLanguageImpl(lang); lang is "eng"
      */
     HawkingTimeParser parser = new HawkingTimeParser();
-    String inputText = "Sounds good. I go back to school next September.";
+    String inputText = "The meeting will start at exactly 5 minutes.";
     HawkingConfiguration hawkingConfiguration = new HawkingConfiguration();
     hawkingConfiguration.setFiscalYearStart(2);
     hawkingConfiguration.setFiscalYearEnd(1);

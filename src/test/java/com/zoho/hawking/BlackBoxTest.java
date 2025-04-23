@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
  * 2. Time Components
  *    - Hours (12/24 hour format)
  *    - Minutes
+ *    - Seconds
  *    - AM/PM indicators
  *    - Time without date
  * 
