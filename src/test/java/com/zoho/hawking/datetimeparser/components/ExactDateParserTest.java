@@ -80,7 +80,8 @@ class ExactDateParserTest {
         continueSetup(trip, inputSentence, inputSentence, tense);
 
         ExactDateParser exactDate = new ExactDateParser(xmlSubstr, tense, dateAndTime, engLang);
-        assertEquals("25", exactDate.timeSpan);
+        exactDate.future();
+        assertEquals("25th", exactDate.timeSpan);
     }
 
     @Test
@@ -97,9 +98,10 @@ class ExactDateParserTest {
         exactDateParser.exactSpan();
         
         // Verify the parsed date
-        assertEquals(2023, dateAndTime.getDateAndTime().getYear());
-        assertEquals(12, dateAndTime.getDateAndTime().getMonthOfYear());
-        assertEquals(25, dateAndTime.getDateAndTime().getDayOfMonth());
+        assertEquals(2020, dateAndTime.getStart().getYear());
+        assertEquals(12, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(20, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(25, dateAndTime.getEnd().getDayOfMonth());
     }
 
 
