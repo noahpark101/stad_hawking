@@ -106,7 +106,7 @@ public class IntegrationTest {
     assertEquals("2025-04-20", end);
   }
 
-  //fails because DateTimeExtractor fails to parse date from string
+  //fails because DateTimeExtractor fails to parse date from string (segmentation works but not classification)
   @Test
   @DisplayName("Standard Date Format 3: Month/Day/Year")
   public void standardDateFormatThree() {

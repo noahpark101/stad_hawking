@@ -75,6 +75,7 @@ public class PropertyTest {
     return Combinators.combine(hours, minutes).as((h, m) -> String.format("%d:%02d", h, m));
   }
 
+  //fails because sometimes the classification does not use the reference date -> (12-1 -> 11:30)
   @Property
   @Label("Property 2: Date defaults to reference when date is not specified")
   boolean defaultsToReferenceDateGivenTime(@ForAll("randomTimeStrings") String str) {
@@ -152,6 +153,7 @@ public class PropertyTest {
             ));
   }
 
+  //fails because Classification is not robust to differently formatted dates
   @Property
   @Label("Property 6: Different formatted dates return the same date from parser")
   boolean parserHasSameOutputForDifferentFormats(@ForAll("randomlyFormattedDateStrings") List<String> input) {
