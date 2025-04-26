@@ -126,13 +126,11 @@ class DayParserTest {
         assertEquals(2025, dayParser.dateAndTime.getEnd().getYear());
         assertEquals(4, dayParser.dateAndTime.getEnd().getMonthOfYear());
         assertEquals(22, dayParser.dateAndTime.getEnd().getDayOfMonth());
-
-
     }
 
     @Test
-    @DisplayName("Basic current day")
-    public void basicCurrentDayTest() {
+    @DisplayName("Today keyword")
+    public void todayKeywordTest() {
         String inputSentence = "Yes! Today is the day.";
         String dateSubstr = "Today is the day";
         Triple<String, Integer, Integer> trip = new Triple<>("D", 0, 5);
@@ -151,7 +149,89 @@ class DayParserTest {
         assertEquals(2025, dateAndTime.getEnd().getYear());
         assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
         assertEquals(20, dateAndTime.getEnd().getDayOfMonth());
+
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+        dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        // FAULT: Unlike MonthParser whose associated number is instantiated unconditionally,
+        // DayParser doesn't instantiate a number so running intermediate() causes NullPointerException
+        // if there's no number like this test case
+//        dayParser.immediate();
+
     }
+
+    @Test
+    @DisplayName("Yesterday keyword")
+    public void yesterdayKeywordTest() {
+        String inputSentence = "Yes! Yesterday was the day.";
+        String dateSubstr = "Yesterday was the day.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 0, 9);
+        String xmlSubstr = "<current_day>yesterday</current_day>";
+        String tense = "PAST";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get DayParser object
+        DateTimeComponent dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertEquals("yesterday", dayParser.timeSpan);
+
+        dayParser.immediatePast();
+        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(19, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(19, dateAndTime.getEnd().getDayOfMonth());
+    }
+
+    @Test
+    @DisplayName("Tomorrow keyword")
+    public void tomorrowKeywordTest() {
+        String inputSentence = "Yes! Tomorrow is the day.";
+        String dateSubstr = "Tomorrow is the day.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 0, 8);
+        String xmlSubstr = "<current_day>tomorrow</current_day>";
+        String tense = "";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get DayParser object
+        DateTimeComponent dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertEquals("tomorrow", dayParser.timeSpan);
+
+        dayParser.immediateFuture();
+        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(21, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(21, dateAndTime.getEnd().getDayOfMonth());
+    }
+
+    @Test
+    @DisplayName("Now keyword")
+    public void nowKeywordTest() {
+        String inputSentence = "Aw man. It is now Thursday.";
+        String dateSubstr = "It is now Thursday.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 7, 18);
+        String xmlSubstr = "<current_day>now</current_day> <day_of_week>thursday</day_of_week>";
+        String tense = "";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get DayParser object
+        DateTimeComponent dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        // FAULT: extractComponentTags() handles current_day and day_of_week exclusively, but
+        // this input is a combination of both. As a result, the day_of_week tag is not considered
+//        assertEquals("thursday", dayParser.timeSpan);
+//        assertEquals("now", dayParser.tenseIndicator);
+
+        dayParser.present();
+//        assertEquals(2025, dateAndTime.getStart().getYear());
+//        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+//        assertEquals(24, dateAndTime.getStart().getDayOfMonth());
+//        assertEquals(2025, dateAndTime.getEnd().getYear());
+//        assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+//        assertEquals(24, dateAndTime.getEnd().getDayOfMonth());
+    }
+
+
 
     @Test
     @DisplayName("Basic day of week")
@@ -198,6 +278,121 @@ class DayParserTest {
         assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
         assertEquals(23, dateAndTime.getEnd().getDayOfMonth());
 
+    }
+
+    @Test
+    @DisplayName("Last day of week")
+    public void lastDayOfWeekTest() {
+        // 4/20/2025 is Sunday
+        String inputSentence = "What? We did that last Friday.";
+        String dateSubstr = "We did that last Friday.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 12, 23);
+        String xmlSubstr = "<implict_prefix>last</implict_prefix> <day_of_week>friday</day_of_week>";
+        String tense = "PAST";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get DayParser object
+        DateTimeComponent dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertEquals("friday", dayParser.timeSpan);
+        assertEquals(5, dayParser.timeSpanValue);
+        assertEquals("last", dayParser.tenseIndicator);
+        assertTrue(dayParser.isExactTimeSpan);
+
+        // FAULT: past() sees "last" and sends the time back at least 7 days unconditionally,
+        // but "last Friday" when reference date is Sunday should only be 2 days ago
+        dayParser.past();
+        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+//        assertEquals(18, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+//        assertEquals(18, dateAndTime.getEnd().getDayOfMonth());
+
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+        dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        dayParser.immediatePast();
+        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(18, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(18, dateAndTime.getEnd().getDayOfMonth());
+    }
+
+    @Test
+    @DisplayName("Stacked last day of week")
+    public void stackedLastDayOfWeekTest() {
+        // 4/20/2025 is Sunday
+        String inputSentence = "What? We did that last last Friday.";
+        String dateSubstr = "We did that last last Friday.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 12, 28);
+        String xmlSubstr = "<implict_prefix>last</implict_prefix> <implict_prefix>last</implict_prefix> <day_of_week>friday</day_of_week>";
+        String tense = "PAST";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get DayParser object
+        DateTimeComponent dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertEquals("friday", dayParser.timeSpan);
+        assertEquals(5, dayParser.timeSpanValue);
+        assertEquals("last", dayParser.tenseIndicator);
+        assertTrue(dayParser.isExactTimeSpan);
+
+        // FAULT (sorta): At least in casual English "last last Friday" means 2 Fridays before
+        // the reference date. past() does not handle this correctly
+        dayParser.past();
+        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+//        assertEquals(11, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+//        assertEquals(11, dateAndTime.getEnd().getDayOfMonth());
+    }
+
+    @Test
+    @DisplayName("This (same as ref date) day of week")
+    public void thisSameDayOfWeekTest() {
+        // 4/20/2025 is Sunday
+        String inputSentence = "I'm happy. We're celebrating this Sunday.";
+        String dateSubstr = "We're celebrating this Sunday.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 18, 29);
+        String xmlSubstr = "<implict_prefix>this</implict_prefix> <day_of_week>sunday</day_of_week>";
+        String tense = "PRESENT";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get DayParser object
+        DateTimeComponent dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertEquals("sunday", dayParser.timeSpan);
+        assertEquals(7, dayParser.timeSpanValue);
+        assertEquals("this", dayParser.tenseIndicator);
+        assertTrue(dayParser.isExactTimeSpan);
+
+        dayParser.present();
+        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(27, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(27, dateAndTime.getEnd().getDayOfMonth());
+
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+        dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        dayParser.future();
+        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(27, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(27, dateAndTime.getEnd().getDayOfMonth());
+
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+        dayParser = new DayParser(xmlSubstr, tense, dateAndTime, engLang);
+        dayParser.immediateFuture();
+        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(27, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(4, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(27, dateAndTime.getEnd().getDayOfMonth());
     }
 
     @Test

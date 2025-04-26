@@ -35,7 +35,7 @@ class HawkingDemo {
       AbstractLanguage abstractLanguage = LanguageFactory.getLanguageImpl(lang); lang is "eng"
      */
     HawkingTimeParser parser = new HawkingTimeParser();
-    String inputText = "Oh I see. It is in a few days.";
+    String inputText = "I'm happy. We're celebrating this Sunday.";
     HawkingConfiguration hawkingConfiguration = new HawkingConfiguration();
     hawkingConfiguration.setTimeZone("EDT");
     Date referenceDate = new Date(1745164800000L); // 4/20/2025

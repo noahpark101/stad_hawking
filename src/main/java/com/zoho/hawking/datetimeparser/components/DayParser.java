@@ -72,6 +72,7 @@ public class DayParser extends DateTimeComponent {
     }
 
     private void computeCurrentSpan(String timeSpanValue) {
+        // The current_day tag seems to only be these 4 strings at the moment, can't achieve full FC for this method
         switch (timeSpanValue) {
             case "now":
                 DateTimeManipulation.setDayStartAndEndTime(dateAndTime, 0, 0, 0, 0);
@@ -161,6 +162,7 @@ public class DayParser extends DateTimeComponent {
 
     @Override
     public void nthSpan() {
+        // Instantiation of isOrdinalLast is commented out, can't achieve full BC for this method
         if (isOrdinalLast) {
             ordinalLast();
         } else {
