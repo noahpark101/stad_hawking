@@ -473,7 +473,7 @@ public class HourParserTest {
   }
 
 
-  //miscalculates recurrent period as 1/2 a day rather than a full, cascading into recurrentCount
+  //miscalculates recurrent period as 1/2 a day for every morning rather than a full, cascading into recurrentCount
   @Test
   @DisplayName("Test 24: setPreviousDependency previous dependency 2")
   void basicTest24() {
