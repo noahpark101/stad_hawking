@@ -72,6 +72,7 @@ public class DayParser extends DateTimeComponent {
     }
 
     private void computeCurrentSpan(String timeSpanValue) {
+        // The current_day tag seems to only be these 4 strings at the moment, can't achieve full FC for this method
         switch (timeSpanValue) {
             case "now":
                 DateTimeManipulation.setDayStartAndEndTime(dateAndTime, 0, 0, 0, 0);
@@ -90,6 +91,7 @@ public class DayParser extends DateTimeComponent {
         }
     }
 
+    // Can't access this entire method because required field to call this method has been commented out
     private void ordinalLast() {
         int nthDayOfSpan;
         List<DateTime> startDateList;
@@ -161,6 +163,7 @@ public class DayParser extends DateTimeComponent {
 
     @Override
     public void nthSpan() {
+        // Instantiation of isOrdinalLast is commented out, can't achieve full BC for this method
         if (isOrdinalLast) {
             ordinalLast();
         } else {
@@ -340,6 +343,8 @@ public class DayParser extends DateTimeComponent {
         long millis;
         long recCount = -1;
 
+        // For each switch case, it's impossible to have an empty dependency string; and a previous dependency
+        // will very likely change the current span tense to "PRESENT". Thus, this method can't achieve full BC.
         switch (dateAndTime.getPreviousDependency()) {
             case Constants.YEAR_SPAN_TAG:
                 history = dateAndTime.getDateAndTime().withTimeAtStartOfDay();
@@ -372,6 +377,8 @@ public class DayParser extends DateTimeComponent {
                 }
                 break;
             default:
+                // isExactTimeSpan and isSet (must be true to access this method) are disjoint when instnatiated, so
+                // full BC can't be achieved with this method
                 if (isExactTimeSpan) {
                     history = dateAndTime.getDateAndTime().withTimeAtStartOfDay();
                     today = dateAndTime.getDateAndTime().plusDays(7).withTimeAtStartOfDay();
