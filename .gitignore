@@ -2,3 +2,4 @@
 target/
 libs/
 .jqwik-database
+src/main/java/com/zoho/hawking/HawkingDemo.java
