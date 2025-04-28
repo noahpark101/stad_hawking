@@ -13,6 +13,7 @@ import com.zoho.hawking.utils.DateTimeProperties;
 import com.zoho.hawking.utils.TimeZoneExtractor;
 import edu.stanford.nlp.util.Triple;
 import org.apache.commons.lang3.tuple.Pair;
+import org.joda.time.DateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -116,6 +117,7 @@ public class HourParserTest {
     assertEquals("morning", hourParser.timeSpan);
   }
 
+  //should be an exact time span but isn't
   @Test
   @DisplayName("Basic Test 1: exact time")
   void basicTest4() {
@@ -148,21 +150,24 @@ public class HourParserTest {
     hourParser.past();
   }
 
+  //past does not
   @Test
   @DisplayName("Test 7: Past")
   void basicTest7() {
     // Input variables should be same across all parsers
-    String inputSentence = "This morning";
-    String dateSubstr = "This morning";
+    String inputSentence = "Last morning";
+    String dateSubstr = "Last morning";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 0, 12);
-    String xmlSubstr = "<implict_prefix>this</implict_prefix> <part_of_day>morning</part_of_day>";
+    String xmlSubstr = "<implict_prefix>last</implict_prefix> <part_of_day>morning</part_of_day>";
     String tense = "";
 
     // Get MonthParser object
     continueSetup(trip, inputSentence, dateSubstr, tense);
     DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
     hourParser.past();
-    assertEquals("PAST", hourParser.sentenceTense);
+    assert(hourParser.dateAndTime.getStart().isBefore(hourParser.dateAndTime.getEnd()));
+    assertEquals("start:2025-04-19T06:00:00.000-04:00\n" +
+            "end:2025-04-19T08:59:59.999-04:00\n", hourParser.dateAndTime.toString());
   }
 
   @Test
@@ -180,9 +185,10 @@ public class HourParserTest {
     DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
     hourParser.tenseIndicator = "";
     hourParser.past();
-    assertEquals("", hourParser.sentenceTense);
+    assert(hourParser.dateAndTime.getStart().isBefore(hourParser.dateAndTime.getEnd()));
   }
 
+  //calculated present as future (1 day from now) -> line 144 of hourParser
   @Test
   @DisplayName("Test 9: Present")
   void basicTest9() {
@@ -197,7 +203,8 @@ public class HourParserTest {
     continueSetup(trip, inputSentence, dateSubstr, tense);
     DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
     hourParser.present();
-    assertEquals("PRESENT", hourParser.sentenceTense);
+    assertEquals("start:2025-04-20T06:00:00.000-04:00\n" +
+            "end:2025-04-20T08:59:59.999-04:00\n", hourParser.dateAndTime.toString());
   }
 
   @Test
@@ -257,17 +264,18 @@ public class HourParserTest {
   @DisplayName("Test 13: Immediate Past")
   void basicTest13() {
     // Input variables should be same across all parsers
-    String inputSentence = "This morning";
-    String dateSubstr = "This morning";
+    String inputSentence = "Last morning";
+    String dateSubstr = "Last morning";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 0, 12);
-    String xmlSubstr = "<implict_prefix>this</implict_prefix> <part_of_day>morning</part_of_day>";
+    String xmlSubstr = "<implict_prefix>last</implict_prefix> <part_of_day>morning</part_of_day>";
     String tense = "";
 
     // Get MonthParser object
     continueSetup(trip, inputSentence, dateSubstr, tense);
     DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
+    hourParser.isExactTimeSpan = true;
     hourParser.immediatePast();
-    assertEquals("PAST", hourParser.sentenceTense);
+    assert(hourParser.dateAndTime.getStart().isBefore(hourParser.dateAndTime.getEnd()));
   }
 
   @Test
@@ -284,7 +292,7 @@ public class HourParserTest {
     continueSetup(trip, inputSentence, dateSubstr, tense);
     DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
     hourParser.immediatePast();
-    assertEquals("ago", hourParser.tenseIndicator);
+    assert(hourParser.dateAndTime.getStart().isBefore(hourParser.dateAndTime.getEnd()));
   }
 
   @Test
@@ -464,8 +472,35 @@ public class HourParserTest {
   }
 
   @Test
-  @DisplayName("Test 24: nth span")
+  @DisplayName("Test 24: setPreviousDependency previous dependency 2")
   void basicTest24() {
+    // Input variables should be same across all parsers
+    String inputSentence = "every morning.";
+    String dateSubstr = "every morning.";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 0, 13);
+    String xmlSubstr = "<part_of_day>morning</part_of_day>";
+    String tense = "";
+
+    // Get MonthParser object
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
+    hourParser.isSet = true;
+    DateTime dt = new DateTime(1745164800000L);
+    DateTime dt2 = new DateTime(1745251200000L);
+    hourParser.dateAndTime.setStart(dt);
+    hourParser.dateAndTime.setEnd(dt2);
+    hourParser.dateAndTime.setPreviousDependency(Constants.HOUR_SPAN_TAG);
+    hourParser.setPreviousDependency();
+
+    assertEquals("start:2025-04-20T12:00:00.000-04:00\n" +
+            "end:2025-04-21T12:00:00.000-04:00\n" +
+            "hourRecurrentPeriod:86400000\n" +
+            "hour:0hourReccurentCount:1", hourParser.dateAndTime.toString());
+  }
+
+  @Test
+  @DisplayName("Test 25: nth span")
+  void basicTest25() {
     // Input variables should be same across all parsers
     String inputSentence = "It is the 5th hour.";
     String dateSubstr = "It is the 5th hour.";
@@ -479,6 +514,33 @@ public class HourParserTest {
     hourParser.nthSpan();
     assertEquals("start:2025-04-20T05:00:00.000-04:00\n" +
             "end:2025-04-20T05:59:59.999-04:00\n", hourParser.dateAndTime.toString());
+  }
+
+  @Test
+  @DisplayName("Test 27: setPreviousDependency previous dependency 3")
+  void basicTest26() {
+    // Input variables should be same across all parsers
+    String inputSentence = "Every 5 hours";
+    String dateSubstr = "Every 5 hours.";
+    Triple<String, Integer, Integer> trip = new Triple<>("D", 0, 13);
+    String xmlSubstr = "<exact_number>5</exact_number> <hour_span>hours</hour_span>";
+    String tense = "";
+
+    // Get MonthParser object
+    continueSetup(trip, inputSentence, dateSubstr, tense);
+    DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
+    hourParser.isSet = true;
+    DateTime dt = new DateTime(1745164800000L);
+    DateTime dt2 = new DateTime(1745251200000L);
+    hourParser.dateAndTime.setStart(dt);
+    hourParser.dateAndTime.setEnd(dt2);
+    hourParser.dateAndTime.setPreviousDependency(Constants.HOUR_SPAN_TAG);
+    hourParser.setPreviousDependency();
+
+    assertEquals("start:2025-04-20T12:00:00.000-04:00\n" +
+            "end:2025-04-21T12:00:00.000-04:00\n" +
+            "hourRecurrentPeriod:3600000\n" +
+            "hour:0hourReccurentCount:1", hourParser.dateAndTime.toString());
   }
 
 
