@@ -395,6 +395,7 @@ public class HourParserTest {
             "end:2025-04-20T19:59:59.999-04:00\n", hourParser.dateAndTime.toString());
   }
 
+  // should have not added remainder at all to end date but it did
   @Test
   @DisplayName("Test 20: Remainder not exact time span")
   void basicTest20() {
@@ -471,6 +472,8 @@ public class HourParserTest {
             "hour:0hourReccurentCount:6", hourParser.dateAndTime.toString());
   }
 
+
+  //miscalculates recurrent period as 1/2 a day rather than a full, cascading into recurrentCount
   @Test
   @DisplayName("Test 24: setPreviousDependency previous dependency 2")
   void basicTest24() {
