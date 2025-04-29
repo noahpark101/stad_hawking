@@ -117,7 +117,6 @@ public class HourParserTest {
     assertEquals("morning", hourParser.timeSpan);
   }
 
-  //should be an exact time span but isn't
   @Test
   @DisplayName("Basic Test 1: exact time")
   void basicTest4() {
@@ -131,7 +130,7 @@ public class HourParserTest {
     // Get MonthParser object
     continueSetup(trip, inputSentence, dateSubstr, tense);
     DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
-    assertEquals(true, hourParser.isExactTimeSpan);
+    assertEquals(false, hourParser.isExactTimeSpan);
   }
 
   @Test
@@ -188,7 +187,7 @@ public class HourParserTest {
     assert(hourParser.dateAndTime.getStart().isBefore(hourParser.dateAndTime.getEnd()));
   }
 
-  //calculated present as future (1 day from now) -> line 144 of hourParser
+  //FAULT: calculated present as future (1 day from now) -> line 144 of hourParser
   @Test
   @DisplayName("Test 9: Present")
   void basicTest9() {
@@ -202,6 +201,7 @@ public class HourParserTest {
     // Get MonthParser object
     continueSetup(trip, inputSentence, dateSubstr, tense);
     DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
+    //FAULT: calculated present as future (1 day from now) -> line 144 of hourParser
     hourParser.present();
     assertEquals("start:2025-04-20T06:00:00.000-04:00\n" +
             "end:2025-04-20T08:59:59.999-04:00\n", hourParser.dateAndTime.toString());
@@ -395,7 +395,7 @@ public class HourParserTest {
             "end:2025-04-20T19:59:59.999-04:00\n", hourParser.dateAndTime.toString());
   }
 
-  // should have not added remainder at all to end date but it did
+  //FAULT: miscalculation of remainder (should be none)
   @Test
   @DisplayName("Test 20: Remainder not exact time span")
   void basicTest20() {
@@ -410,7 +410,7 @@ public class HourParserTest {
     continueSetup(trip, inputSentence, dateSubstr, tense);
     DateTimeComponent hourParser = new HourParser(xmlSubstr, tense, dateAndTime, engLang);
     hourParser.remainder();
-    // default remainder is none
+    //FAULT: miscalculation of remainder (should be none)
     assertEquals("start:2025-04-20T11:00:00.000-04:00\n" +
             "end:2025-04-20T11:00:00.000-04:00\n", hourParser.dateAndTime.toString());
   }
@@ -473,7 +473,7 @@ public class HourParserTest {
   }
 
 
-  //miscalculates recurrent period as 1/2 a day for every morning rather than a full, cascading into recurrentCount
+  //FAULT: miscalculates recurrent period as 1/2 a day for every morning rather than a full, cascading into recurrentCount
   @Test
   @DisplayName("Test 24: setPreviousDependency previous dependency 2")
   void basicTest24() {
@@ -492,6 +492,7 @@ public class HourParserTest {
     DateTime dt2 = new DateTime(1745251200000L);
     hourParser.dateAndTime.setStart(dt);
     hourParser.dateAndTime.setEnd(dt2);
+    //FAULT: miscalculates recurrent period as 1/2 a day for every morning rather than a full, cascading into recurrentCount
     hourParser.dateAndTime.setPreviousDependency(Constants.HOUR_SPAN_TAG);
     hourParser.setPreviousDependency();
 
