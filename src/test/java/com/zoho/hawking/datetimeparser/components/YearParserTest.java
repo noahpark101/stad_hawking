@@ -265,6 +265,7 @@ public class YearParserTest {
 
     @Test
     @DisplayName("Nth span test")
+    // does not set the correct year (2020 instead of 2023)
     public void nthSpanTest() {
         String inputSentence = "The meeting is in the 3rd year.";
         Triple<String, Integer, Integer> trip = new Triple<>("D", 22, 30);
@@ -356,6 +357,7 @@ public class YearParserTest {
 
     @Test
     @DisplayName("Test present with set-based time span")
+    // pushes the year forward by 1 year instead of staying in the current year
     public void presentWithSetTest() {
         String inputSentence = "The meeting is yearly.";
         Triple<String, Integer, Integer> trip = new Triple<>("D", 15, 21);

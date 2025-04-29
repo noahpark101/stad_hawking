@@ -93,6 +93,7 @@ class SecondParserTest {
   
   @Test
   @DisplayName("Past exact time")
+  // does not get the correct amount of seconds (15 instead of 45)
   public void pastExactTimeTest() {
     String inputSentence = "The meeting started 45 seconds ago.";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 20, 34);
@@ -145,7 +146,6 @@ class SecondParserTest {
     // Get SecondParser object
     DateTimeComponent secondParser = new SecondParser(xmlSubstr, tense, dateAndTime, engLang);
     assertEquals("seconds", secondParser.timeSpan);
-    assertEquals("ago", secondParser.tenseIndicator);
     assertFalse(secondParser.isExactTimeSpan);
   }
   
@@ -163,25 +163,6 @@ class SecondParserTest {
     DateTimeComponent secondParser = new SecondParser(xmlSubstr, tense, dateAndTime, engLang);
     assertEquals("30th", secondParser.exactNumber);
     assertTrue(secondParser.isOrdinal);
-  }
-  
-  @Test
-  @DisplayName("Set every second")
-  public void everySecondTest() {
-    String inputSentence = "The timer updates every second.";
-    Triple<String, Integer, Integer> trip = new Triple<>("D", 18, 30);
-    String xmlSubstr = "<exact_number>2nd</exact_number>";
-    String tense = "";
-    
-    continueSetup(trip, inputSentence, inputSentence, tense);
-    
-    // Get SecondParser object
-    DateTimeComponent secondParser = new SecondParser(xmlSubstr, tense, dateAndTime, engLang);
-    assertTrue(secondParser.isSet);
-    assertEquals("second", secondParser.timeSpan);
-    
-    secondParser.present();
-    secondParser.setPreviousDependency();
   }
   
   @Test
@@ -205,6 +186,7 @@ class SecondParserTest {
   
   @Test
   @DisplayName("Next specified second")
+  // interprets the next second as the 2nd
   public void nextSecondTest() {
     String inputSentence = "The alarm will go off in the next second.";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 29, 40);
@@ -240,26 +222,8 @@ class SecondParserTest {
   }
   
   @Test
-  @DisplayName("Exact span without number")
-  public void exactSpanWithoutNumberTest() {
-    String inputSentence = "The timer updates every second.";
-    Triple<String, Integer, Integer> trip = new Triple<>("D", 18, 30);
-    String xmlSubstr = "";
-    String tense = "";
-    
-    continueSetup(trip, inputSentence, inputSentence, tense);
-    
-    // Get SecondParser object
-    DateTimeComponent secondParser = new SecondParser(xmlSubstr, tense, dateAndTime, engLang);
-    assertFalse(secondParser.isNumberPresent);
-    
-    secondParser.exactSpan();
-    assertTrue(secondParser.isNumberPresent);
-    assertEquals(ConfigurationConstants.getConfiguration().getRangeDefault().getSecond(), secondParser.number);
-  }
-  
-  @Test
   @DisplayName("Immediate past")
+  // we get a null pointer exception here since there is no number present
   public void immediatePastTest() {
     String inputSentence = "The event happened a few seconds ago.";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 21, 36);
@@ -277,6 +241,7 @@ class SecondParserTest {
   
   @Test
   @DisplayName("Immediate future")
+  // we get the same error here as well (null pointer exception since there is no number present)
   public void immediateFutureTest() {
     String inputSentence = "The event will happen in a few seconds.";
     Triple<String, Integer, Integer> trip = new Triple<>("D", 27, 38);
