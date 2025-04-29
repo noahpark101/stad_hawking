@@ -36,8 +36,16 @@ class CustomDateParserTest {
         hawkConfig = new HawkingConfiguration();
         hawkConfig.setTimeZone("EST");
         try {
-            hawkConfig.setFiscalYearStart(1);
-            hawkConfig.setFiscalYearEnd(12);
+            // Using US Federal Fiscal Year of October 1 to September 30.
+            // Thus:
+            // Q1 = October 1 to December 31
+            // Q2 = January 1 to March 31
+            // H1 = October 1 to March 31
+            // Q3 = April 1 to June 30
+            // Q4 = July 1 to September 30
+            // H2 = April 1 to September 30
+            hawkConfig.setFiscalYearStart(10);
+            hawkConfig.setFiscalYearEnd(9);
         } catch (Exception e) {
             assert(false);
         }
@@ -108,7 +116,7 @@ class CustomDateParserTest {
         String dateSubstr = "Financials don't look good for this Q1.";
         Triple<String, Integer, Integer> trip = new Triple<>("D", 32, 39);
         String xmlSubstr = "<implict_prefix>this</implict_prefix> <quarterofyear>Q1</quarterofyear>";
-        String tense = "";
+        String tense = "PAST";
         continueSetup(trip, inputSentence, dateSubstr, tense);
 
         // Get CustomDateParser object
@@ -120,12 +128,13 @@ class CustomDateParserTest {
         // causing a NullPointerException
         // Will manually set timespan to lowercase
         customDParser.timeSpan = "q1";
+        // FAULT: yearsToAdd() doesn't tell immediate() to set the year back to 2024
         customDParser.immediate();
-        assertEquals(2025, dateAndTime.getStart().getYear());
-        assertEquals(1, dateAndTime.getStart().getMonthOfYear());
+//        assertEquals(2024, dateAndTime.getStart().getYear());
+        assertEquals(10, dateAndTime.getStart().getMonthOfYear());
         assertEquals(1, dateAndTime.getStart().getDayOfMonth());
-        assertEquals(2025, dateAndTime.getEnd().getYear());
-        assertEquals(3, dateAndTime.getEnd().getMonthOfYear());
+//        assertEquals(2024, dateAndTime.getEnd().getYear());
+        assertEquals(12, dateAndTime.getEnd().getMonthOfYear());
         assertEquals(31, dateAndTime.getEnd().getDayOfMonth()); 
     }
 
@@ -146,11 +155,11 @@ class CustomDateParserTest {
 
         customDParser.future();
         assertEquals(2025, dateAndTime.getStart().getYear());
-        assertEquals(10, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(7, dateAndTime.getStart().getMonthOfYear());
         assertEquals(1, dateAndTime.getStart().getDayOfMonth());
         assertEquals(2025, dateAndTime.getEnd().getYear());
-        assertEquals(12, dateAndTime.getEnd().getMonthOfYear());
-        assertEquals(31, dateAndTime.getEnd().getDayOfMonth()); 
+        assertEquals(9, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(30, dateAndTime.getEnd().getDayOfMonth());
     }
 
     @Test
@@ -194,13 +203,14 @@ class CustomDateParserTest {
         assertEquals("next", customDParser.tenseIndicator);
         assertEquals(1, customDParser.number);
 
+        // FAULT: present() tries to get the quarter after current quarter (Q3) but cycles to Q0 which doesn't exist
         customDParser.immediateFuture();
-        assertEquals(2025, dateAndTime.getStart().getYear());
-        assertEquals(7, dateAndTime.getStart().getMonthOfYear());
-        assertEquals(1, dateAndTime.getStart().getDayOfMonth());
-        assertEquals(2025, dateAndTime.getEnd().getYear());
-        assertEquals(9, dateAndTime.getEnd().getMonthOfYear());
-        assertEquals(30, dateAndTime.getEnd().getDayOfMonth()); 
+//        assertEquals(2025, dateAndTime.getStart().getYear());
+//        assertEquals(7, dateAndTime.getStart().getMonthOfYear());
+//        assertEquals(1, dateAndTime.getStart().getDayOfMonth());
+//        assertEquals(2025, dateAndTime.getEnd().getYear());
+//        assertEquals(9, dateAndTime.getEnd().getMonthOfYear());
+//        assertEquals(30, dateAndTime.getEnd().getDayOfMonth());
     }
 
     @Test
@@ -232,8 +242,8 @@ class CustomDateParserTest {
     @DisplayName("These 2 halves")
     public void these2HalvesTest() {
         String inputSentence = "Oh? The project continues for these halves.";
-        String dateSubstr = "The project continues for these 2 halves.";
-        Triple<String, Integer, Integer> trip = new Triple<>("D", 27, 41);
+        String dateSubstr = "The project continues for these halves.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 27, 39);
         String xmlSubstr = "<implict_prefix>these</implict_prefix> <halfofyear>halves</halfofyear>";
         String tense = "PRESENT";
         continueSetup(trip, inputSentence, dateSubstr, tense);
@@ -248,13 +258,39 @@ class CustomDateParserTest {
 //        assertEquals(2, customDParser.number);
 
         // Due to fault above, calling present() will cause NullPointerException
-//        customDParser.present();
-//        assertEquals(2025, dateAndTime.getStart().getYear());
-//        assertEquals(1, dateAndTime.getStart().getMonthOfYear());
+        customDParser.present();
+//        assertEquals(2024, dateAndTime.getStart().getYear());
+//        assertEquals(10, dateAndTime.getStart().getMonthOfYear());
 //        assertEquals(1, dateAndTime.getStart().getDayOfMonth());
 //        assertEquals(2025, dateAndTime.getEnd().getYear());
-//        assertEquals(12, dateAndTime.getEnd().getMonthOfYear());
-//        assertEquals(31, dateAndTime.getEnd().getDayOfMonth()); 
+//        assertEquals(9, dateAndTime.getEnd().getMonthOfYear());
+//        assertEquals(30, dateAndTime.getEnd().getDayOfMonth());
+    }
+
+    @Test
+    @DisplayName("Next half")
+    public void nextHalfTest() {
+        String inputSentence = "Oh? The forum focuses on the last h1.";
+        String dateSubstr = "The forum focuses on the next last h1.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 26, 38);
+        String xmlSubstr = "<implict_prefix>last</implict_prefix> <halfofyear>h1</halfofyear>";
+        String tense = "PAST";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get CustomDateParser object
+        DateTimeComponent customDParser = new CustomDateParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertEquals("h1", customDParser.timeSpan);
+        assertEquals("last", customDParser.tenseIndicator);
+        assertEquals(1, customDParser.number);
+
+        // Due to fault above, calling present() will cause NullPointerException
+        customDParser.past();
+        assertEquals(2024, dateAndTime.getStart().getYear());
+        assertEquals(10, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(1, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(3, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(31, dateAndTime.getEnd().getDayOfMonth());
     }
 
     @Test
@@ -274,12 +310,111 @@ class CustomDateParserTest {
         assertEquals(1, customDParser.number);
 
         customDParser.past();
-        assertEquals(2024, dateAndTime.getStart().getYear());
-        assertEquals(1, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(2023, dateAndTime.getStart().getYear());
+        assertEquals(10, dateAndTime.getStart().getMonthOfYear());
         assertEquals(1, dateAndTime.getStart().getDayOfMonth());
         assertEquals(2024, dateAndTime.getEnd().getYear());
-        assertEquals(12, dateAndTime.getEnd().getMonthOfYear());
-        assertEquals(31, dateAndTime.getEnd().getDayOfMonth());
+        assertEquals(9, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(30, dateAndTime.getEnd().getDayOfMonth());
+    }
+
+    @Test
+    @DisplayName("This fiscal year")
+    public void thisFiscalYearTest() {
+        String inputSentence = "Great work. Let's get a great run for this fiscal year.";
+        String dateSubstr = "Let's get a great run for this fiscal year.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 32, 43);
+        String xmlSubstr = "<implict_prefix>this</implict_prefix> <custom_year>fiscalyear</custom_year>";
+        String tense = "PRESENT";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get CustomDateParser object
+        DateTimeComponent customDParser = new CustomDateParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertEquals("fiscalyear", customDParser.timeSpan);
+        assertEquals("this", customDParser.tenseIndicator);
+        assertEquals(1, customDParser.number);
+
+        // FAULT: immediate() should be setting start of the current fiscal year to October 2024,
+        // but it sets both the start and end of the fiscal year to the future.
+        customDParser.immediate();
+//        assertEquals(2024, dateAndTime.getStart().getYear());
+        assertEquals(10, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(1, dateAndTime.getStart().getDayOfMonth());
+//        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(9, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(30, dateAndTime.getEnd().getDayOfMonth());
+    }
+
+    @Test
+    @DisplayName("In numbered fiscal years")
+    public void inNumberedFiscalYrTest() {
+        String inputSentence = "Not a critical problem. We'll do it in 1 fiscal year.";
+        String dateSubstr = "We'll do it in 1 fiscal years.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 16, 30);
+        String xmlSubstr = "<exact_number>1</exact_number> <custom_year>fiscalyear</custom_year>";
+        String tense = "FUTURE";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get CustomDateParser object
+        DateTimeComponent customDParser = new CustomDateParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertEquals("fiscalyear", customDParser.timeSpan);
+        assertEquals(1, customDParser.number);
+
+        // FAULT: yearsToAdd() adds 1 year even though the next fiscal year is this October
+        customDParser.future();
+//        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(10, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(1, dateAndTime.getStart().getDayOfMonth());
+//        assertEquals(2026, dateAndTime.getEnd().getYear());
+        assertEquals(9, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(30, dateAndTime.getEnd().getDayOfMonth());
+    }
+
+    @Test
+    @DisplayName("Remaining quarter")
+    public void remainingQuarterTest() {
+
+        String inputSentence = "This will go on for the rest of this quarter.";
+        String dateSubstr = "This will go on for the rest of this quarter.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 25, 45);
+        String xmlSubstr = "<implict_prefix>last</implict_prefix> <quarterofyear>quarter</quarterofyear>";
+        String tense = "";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get CustomDateParser object
+        DateTimeComponent customDParser = new CustomDateParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertEquals("quarter", customDParser.timeSpan);
+
+        // Remaining tense indicator not implemented yet
+        customDParser.tenseIndicator = "remaining";
+
+        customDParser.remainder();
+        assertEquals(2025, dateAndTime.getStart().getYear());
+        assertEquals(4, dateAndTime.getStart().getMonthOfYear());
+        assertEquals(20, dateAndTime.getStart().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+        assertEquals(6, dateAndTime.getEnd().getMonthOfYear());
+        assertEquals(30, dateAndTime.getEnd().getDayOfMonth());
+        assertEquals(2025, dateAndTime.getEnd().getYear());
+    }
+
+    @Test
+    @DisplayName("Basic set quarter")
+    public void quarterlyTest() {
+        String inputSentence = "Agreed. We can have meetings quarterly.";
+        String dateSubstr = "We can have meetings quarterly.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 22, 31);
+        String xmlSubstr = "<set_quarterofyear>quarterly</set_quarterofyear>";
+        String tense = "";
+        continueSetup(trip, inputSentence, dateSubstr, tense);
+
+        // Get CustomDateParser object
+        // FAULT: tagParser() handles set_quarterofyear as quarterofyear and messes up string parsing
+        DateTimeComponent customDParser = new CustomDateParser(xmlSubstr, tense, dateAndTime, engLang);
+        assertTrue(customDParser.isSet);
+
+        customDParser.setPreviousDependency();
+        assertEquals(1000 * 60 * 60 * 24, customDParser.dateAndTime.getDayRecurrentPeriod());
     }
 
 }

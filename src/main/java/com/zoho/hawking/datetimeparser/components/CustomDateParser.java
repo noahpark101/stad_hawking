@@ -55,6 +55,7 @@ public class CustomDateParser extends DateTimeComponent {
             isSet = true;
             number = 1;
             isNumberPresent = true;
+        // For custom dates, this is essentially an else statement, can't achieve full BC for this method
         } else if (getTagMap().containsKey(Constants.CUSTOMYEAR)) {
             timeSpan = getTagMap().get(Constants.CUSTOMYEAR);
             whatWeDeal = 3;
@@ -72,6 +73,7 @@ public class CustomDateParser extends DateTimeComponent {
     }
 
     void computeCurrent() {
+        // whatWeDeal is only instantiated as 1|2|3, can't access default branch for this switch-case
         switch (whatWeDeal) {
             case 1:
                 customDateMonths = ConfigurationConstants.getConfiguration().getCustomDate().getQuarter();
@@ -142,6 +144,7 @@ public class CustomDateParser extends DateTimeComponent {
         } else {
             int modVal = (12 / noOfMonthsInCustom);
             int customSpanNo = ((currentCustomDate.charAt(1) - 1) + modVal) % modVal;
+            // isCurrent is only set to true by immediate() and isExactCustom can never be true here. Can't achieve full BC for this method.
             customSpan = (isCurrent || isExactCustom) ? currentCustomDate : currentCustomDate.charAt(0) + "" + (customSpanNo);
         }
         Pair<Integer, Integer> months = customDateMonths.get(customSpan);
@@ -168,6 +171,7 @@ public class CustomDateParser extends DateTimeComponent {
         } else {
             int modVal = (12 / noOfMonthsInCustom);
             int customSpanNo = ((currentCustomDate.charAt(1) + 1) + modVal) % modVal;
+            // isCurrent is only set to true by immediate() and isExactCustom can never be true here. Can't achieve full BC for this method.
             customSpan = (isCurrent || isExactCustom) ? currentCustomDate : currentCustomDate.charAt(0) + "" + (customSpanNo);
         }
         Pair<Integer, Integer> months = customDateMonths.get(customSpan);
