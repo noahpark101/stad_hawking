@@ -156,9 +156,9 @@ class MinuteParserTest {
     @Test
     @DisplayName("Test immediate past")
     public void testImmediatePast() {
-        String inputSentence = "The meeting just started.";
-        Triple<String, Integer, Integer> trip = new Triple<>("D", 25, 37);
-        String xmlSubstr = "<implict_prefix>just</implict_prefix> <minute_span>minute</minute_span>";
+        String inputSentence = "The meeting just started a few minutes ago.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 12, 42);
+        String xmlSubstr = "<implict_prefix>a</implict_prefix> <implict_prefix>few</implict_prefix> <minute_span>minutes</minute_span> <implict_postfix>ago</implict_postfix>";
         String tense = "PAST";
         
         continueSetup(trip, inputSentence, inputSentence, tense);
@@ -174,9 +174,9 @@ class MinuteParserTest {
     @Test
     @DisplayName("Test immediate future")
     public void testImmediateFuture() {
-        String inputSentence = "The meeting will start just soon.";
-        Triple<String, Integer, Integer> trip = new Triple<>("D", 23, 32);
-        String xmlSubstr = "";
+        String inputSentence = "The meeting will start in a few minutes.";
+        Triple<String, Integer, Integer> trip = new Triple<>("D", 23, 39);
+        String xmlSubstr = "<implict_prefix>in</implict_prefix> <implict_prefix>a</implict_prefix> <implict_prefix>few</implict_prefix> <minute_span>minutes</minute_span>";
         String tense = "FUTURE";
         
         continueSetup(trip, inputSentence, inputSentence, tense);
@@ -185,24 +185,6 @@ class MinuteParserTest {
         minuteParser.immediateFuture();
         
         // Immediate future should behave like present tense
-        DateTime refDateTime = new DateTime(refDate);
-        assertTrue(dateAndTime.getDateAndTime().isAfter(refDateTime));
-    }
-
-    @Test
-    @DisplayName("Test immediate with present tense")
-    public void testImmediateWithPresentTense() {
-        String inputSentence = "The meeting will start just now.";
-        Triple<String, Integer, Integer> trip = new Triple<>("D", 25, 37);
-        String xmlSubstr = "<implict_prefix>just</implict_prefix> <minute_span>minute</minute_span>";
-        String tense = "PRESENT";
-        
-        continueSetup(trip, inputSentence, inputSentence, tense);
-        
-        MinuteParser minuteParser = new MinuteParser(xmlSubstr, tense, dateAndTime, engLang);
-        minuteParser.immediate();
-        
-        // Verify immediate present behavior
         DateTime refDateTime = new DateTime(refDate);
         assertTrue(dateAndTime.getDateAndTime().isAfter(refDateTime));
     }

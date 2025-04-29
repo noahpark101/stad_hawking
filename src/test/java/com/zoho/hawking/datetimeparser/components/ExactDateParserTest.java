@@ -13,7 +13,6 @@ import com.zoho.hawking.utils.DateTimeProperties;
 import com.zoho.hawking.utils.TimeZoneExtractor;
 import edu.stanford.nlp.util.Triple;
 import org.apache.commons.lang3.tuple.Pair;
-import org.joda.time.DateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -71,6 +70,7 @@ class ExactDateParserTest {
 
     @Test
     @DisplayName("Basic test")
+    // FAULT: does not get the date (25th) from sentence
     public void testBasic() {
         String inputSentence = "The meeting will be on Decemeber 25th";
         Triple<String, Integer, Integer> trip = new Triple<>("D", 20, 37);
@@ -86,10 +86,11 @@ class ExactDateParserTest {
 
     @Test
     @DisplayName("Test exact date parsing with custom format")
+    // FAULT: does not use the reference year and gets null pointer reference when trying to get the year
     public void testExactDateParsing() {
         String inputSentence = "The event will take place from Decemeber 20th to Decemeber 25th";
-        Triple<String, Integer, Integer> trip = new Triple<>(Constants.EXACT_DATE_TAG, 16, 26);
-        String xmlSubstr = "<exact_date>12/25/2023</exact_date>";
+        Triple<String, Integer, Integer> trip = new Triple<>(Constants.EXACT_DATE_TAG, 16, 63);
+        String xmlSubstr = "<implict_prefix>from</implict_prefix> <exact_number>20th</exact_number> exact_number>25th</exact_number>";
         String tense = "PRESENT";
 
         continueSetup(trip, inputSentence, inputSentence, tense);
