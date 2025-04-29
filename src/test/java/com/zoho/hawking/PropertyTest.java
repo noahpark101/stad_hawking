@@ -81,7 +81,7 @@ public class PropertyTest {
     return Combinators.combine(hours, minutes).as((h, m) -> String.format("%d:%02d", h, m));
   }
 
-  //fails because sometimes the classification does not use the reference date -> (12-1 -> 11:30)
+  //FAULT: fails because sometimes the classification does not use the reference date -> (12-1 -> 11:30)
   @Property
   @Label("Property 2: Date defaults to reference when date is not specified")
   boolean defaultsToReferenceDateGivenTime(@ForAll("randomTimeStrings") String str) {
@@ -152,6 +152,7 @@ public class PropertyTest {
             String.format("It is 2020-%s-%s.", d, m));
   }
 
+  //FAULT: Parsed formatted output cannot be reread into the same parsed date again (classification is failing)
   @Property
   @Label("Property 5: Parsed output that is reformatted should yield same parsed output")
   boolean ideompotentParsing(@ForAll("strictFormatString") String input) {
@@ -181,7 +182,7 @@ public class PropertyTest {
             ));
   }
 
-  //fails because Classification is not robust to differently formatted dates
+  //FAULT: fails because Classification is not robust to differently formatted dates
   @Property
   @Label("Property 6: Different formatted dates return the same date from parser")
   boolean parserHasSameOutputForDifferentFormats(@ForAll("randomlyFormattedDateStrings") List<String> input) {
@@ -235,6 +236,7 @@ public class PropertyTest {
             Arbitraries.just(intro + ", I don't know what to do."));
   }
 
+  //FAULT: parser does not default to reference date sometimes when given only present relative words
   @Property
   @Label("Property 8: Present relative words should make TimeParser default to reference date")
   boolean presentRelativeWordsDefaultToReferenceDate(@ForAll("presentRelativeStrings") String input) {
@@ -262,6 +264,7 @@ public class PropertyTest {
 
   }
 
+  //FAULT: parser is sensitive to capitalization
   @Property
   @Label("Property 9: For strings that are the same except capitalization, the parser should yield the same output")
   boolean randomCapitalizationDoesntAffectParser(@ForAll("randomCapitalStrings") List<String> input) {

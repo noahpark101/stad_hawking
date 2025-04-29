@@ -90,7 +90,7 @@ public class IntegrationTest {
     assertEquals("2025-04-20", end);
   }
 
-  //fails because segmentation fails to get portion of date within input string
+  //FAULT: fails because segmentation fails to get portion of date within input string
   @Test
   @DisplayName("Standard Date Format 2: Day Month Year")
   public void standardDateFormatTwo() {
@@ -99,6 +99,7 @@ public class IntegrationTest {
     DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
     ParserOutput output = datesFound.getParserOutputs().get(0);
     //check date segmentation
+    //FAULT: fails because segmentation fails to get portion of date within input string
     assertEquals("20 April 2025", output.getText());
     //check date classification
     DateRange dateRange = output.getDateRange();
@@ -106,13 +107,14 @@ public class IntegrationTest {
     assertEquals("2025-04-20", end);
   }
 
-  //fails because DateTimeExtractor fails to parse date from string (segmentation works but not classification)
+  //FAULT: fails because DateTimeExtractor fails to parse date from string (segmentation works but not classification)
   @Test
   @DisplayName("Standard Date Format 3: Month/Day/Year")
   public void standardDateFormatThree() {
     String inputText = "It is 04/20/2025";
     hawkingConfiguration.setTimeZone("EDT");
     DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    //FAULT: fails because DateTimeExtractor fails to parse date from string (segmentation works but not classification)
     ParserOutput output = datesFound.getParserOutputs().get(0);
     //check date segmentation
     assertEquals("04/20/2025", output.getText());
@@ -122,13 +124,14 @@ public class IntegrationTest {
     assertEquals("2025-04-20", end);
   }
 
-  //fails because DateTimeExtractor fails to parse date from string
+  //FAULT: fails because DateTimeExtractor fails to parse date from string
   @Test
   @DisplayName("Standard Date Format 4: Month-Day-Year")
   public void standardDateFormatFour() {
     String inputText = "It is 04-20-2025";
     hawkingConfiguration.setTimeZone("EDT");
     DatesFound datesFound = parser.parse(inputText, referenceDate, hawkingConfiguration, "eng");
+    //FAULT: fails because DateTimeExtractor fails to parse date from string
     ParserOutput output = datesFound.getParserOutputs().get(0);
     //check date segmentation
     assertEquals("04-20-2025", output.getText());
@@ -140,7 +143,7 @@ public class IntegrationTest {
 
   //integration testing for DateRange calculation and segmentation/classification
 
-  //fails because date range misconfigures start date
+  //FAULT: fails because date range misconfigures start date
   @Test
   @DisplayName("Date Range 1: Week")
   public void dateRangeOne() {
@@ -154,6 +157,7 @@ public class IntegrationTest {
     DateRange dateRange = output.getDateRange();
     String start = getDate(dateRange.getStart().toString());
     String end = getDate(dateRange.getEnd().toString());
+    //FAULT: fails because date range misconfigures start date
     assertEquals("2020-12-01", start);
     assertEquals("2020-12-08", end);
   }
@@ -175,7 +179,7 @@ public class IntegrationTest {
     assertEquals("2020-12-06", end);
   }
 
-  //fails because date range considers a month 30 days without considering reference month
+  //FAULT: fails because date range considers a month 30 days without considering reference month
   @Test
   @DisplayName("Date Range 3: Month")
   public void dateRangeThree() {
@@ -189,11 +193,12 @@ public class IntegrationTest {
     DateRange dateRange = output.getDateRange();
     String start = getDate(dateRange.getStart().toString());
     String end = getDate(dateRange.getEnd().toString());
+    //FAULT: fails because date range considers a month 30 days without considering reference month
     assertEquals("2020-12-01", start);
     assertEquals("2020-01-01", end);
   }
 
-  //fails because date range miscalculates a year as 30 days
+  //FAULT: fails because date range miscalculates a year as 30 days
   @Test
   @DisplayName("Date Range 4: Year")
   public void dateRangeYear() {
@@ -207,6 +212,7 @@ public class IntegrationTest {
     DateRange dateRange = output.getDateRange();
     String start = getDate(dateRange.getStart().toString());
     String end = getDate(dateRange.getEnd().toString());
+    //FAULT: fails because date range miscalculates a year as 30 days
     assertEquals("2020-12-01", start);
     assertEquals("2021-12-01", end);
   }
